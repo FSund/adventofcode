@@ -76,6 +76,17 @@ def do_move_2(amount, source, destination, stacks):
         stacks[source].pop(-1)
         amount -= 1
 
+def get_output(stacks):
+    out = ""
+    for s in stacks:
+        if len(s):
+            out += s[-1]
+        else:
+            out += " "
+
+    return out
+
+
 sum = 0
 with open("input.txt") as file:
     # get_starting_stacks(file)
@@ -84,24 +95,11 @@ with open("input.txt") as file:
     
     for line in file:
         line = line[:-1]
-        # move 2 from 4 to 2
+        # example: "move 2 from 4 to 2"
         _, amount, _, source, _, destination = line.split(" ")
         # do_move(int(amount), int(source)-1, int(destination)-1, stacks)
         do_move_2(int(amount), int(source)-1, int(destination)-1, stacks)
         # print(stacks)
+        # print(get_output(stacks))
 
-out = ""
-for s in stacks:
-    out += s[-1]
-print(out)
-# print(stacks)
-        
-    # for line in file:
-    #     r1, r2 = line.split(",")
-    #     r1 = [int(r) for r in r1.split("-")]
-    #     r2 = [int(r) for r in r2.split("-")]
-    #     # sum += is_fully_contained_in_other(r1, r2)
-    #     sum += has_some_overlap(r1, r2)
-        
-print(sum)  # 285 too low
-# 550 too low
+print(get_output(stacks))

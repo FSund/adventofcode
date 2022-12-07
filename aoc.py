@@ -22,6 +22,8 @@ class FileSystem:
         return self.dirs.get_total_size()
 
 class Dir:
+    totals = []
+
     def __init__(self, name):
         self.size_of_files = 0
         self.total_size = None
@@ -47,6 +49,8 @@ class Dir:
     def get_total_size(self):
         if not self.total_size:
             self.total_size = self.size_of_files + sum([dir.get_total_size() for key, dir in self.dirs.items()])
+            Dir.totals.append(self.total_size)
+            print(f"{self.name}: total size: {self.total_size}")
         
         return self.total_size
 

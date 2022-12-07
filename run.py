@@ -38,7 +38,7 @@ def ls_cmd(lines):
     return sum_of_file_sizes, dirs
 
 lines = []
-with open("example_input.txt") as file:
+with open("input.txt") as file:
     for line in file:
         lines.append(line[:-1])
 
@@ -84,6 +84,29 @@ for idx, line in enumerate(lines):
         
         fs.add_files(path, f_sum)
 
-print(fs.get_total_size())
+total_file_size = fs.get_total_size()
 
-print(sizes)
+s = 0
+for size in Dir.totals:
+    if size <= 100000:
+        s += size
+print(s)
+
+# print(sizes)
+
+disk_size = 70000000
+required_space = 30000000
+
+# Find the smallest directory that, if deleted, would free up enough space on the filesystem to run the update. What is the total size of that directory?
+free_space = disk_size - total_file_size
+required_delete = required_space - free_space
+
+acceptable = []
+for size in Dir.totals:
+    if size >= required_delete:
+        acceptable.append(size)
+
+print(acceptable)
+print(min(acceptable))
+
+# 25773269 too high

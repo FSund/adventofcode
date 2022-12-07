@@ -38,37 +38,21 @@ def ls_cmd(lines):
     return sum_of_file_sizes, dirs
 
 lines = []
-with open("example_input.txt") as file:
+with open("input.txt") as file:
     for line in file:
         lines.append(line[:-1])
-
-for i in range(10):
-    lines.append("$ cd ..")
 
 dirs = Dir("/")
 path = []
 sizes = {}
 for idx, line in enumerate(lines):
     if "$ cd" in line:
-        dir = line.split(" ")[-1]
-        if dir == "..":
-            # update total when leaving dir
-            sizes[":".join(path)]["total"] = sizes[":".join(path)]["local"] + sizes[":".join(path)]["subdirs"]
-            
-            # update subdirs size when entering folder one level up
-            f_sum = sizes[":".join(path)]["local"]
+        p = line.split(" ")[-1]
+        if p == "..":
             path.pop()
-            if len(path) == 0:
-                break
-            sizes[":".join(path)]["subdirs"] += f_sum
-        else: # go to dir
-            path += [dir]
-
-            # create dir
-            sizes[":".join(path)] = {}
-            sizes[":".join(path)]["local"] = 0
-            sizes[":".join(path)]["subdirs"] = 0
-            sizes[":".join(path)]["total"] = 0
+        else:
+            path += [p]
+            dirs
         print(path)
     if "$ ls" in line:
         # size, dirs = ls_cmd(get_lines_until_next_command(lines[idx+1:]))
@@ -77,9 +61,6 @@ for idx, line in enumerate(lines):
         ls_out = get_lines_until_next_command(lines[idx+1:])
         print(f"{ls_out = }")
         f_sum = get_sum_of_file_sizes(ls_out)
-        print(f"{f_sum = }")
-        sizes[":".join(path)]["local"] = f_sum
-        # dirs.
-        
+        sizes[":".join(path)] = f_sum
 
 print(sizes)

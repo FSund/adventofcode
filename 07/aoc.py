@@ -50,7 +50,7 @@ class Dir:
         if not self.total_size:
             self.total_size = self.size_of_files + sum([dir.get_total_size() for key, dir in self.dirs.items()])
             Dir.totals.append(self.total_size)
-            print(f"{self.name}: total size: {self.total_size}")
+            # print(f"{self.name}: total size: {self.total_size}")
         
         return self.total_size
 
@@ -59,23 +59,3 @@ class Dir:
 
     def __repr__(self):
         return self.__str__()
-
-if __name__ == "__main__":
-    d = Dir("/")
-    d.size_of_files = 14848514 + 8504156
-    
-    d.mkdir_p(["a"])
-    d.get_subdir(["a"]).size_of_files = 29116 + 2557 + 62596
-
-    d.mkdir_p(["a", "e"])
-    d.get_subdir(["a", "e"]).size_of_files = 584
-    
-    d.mkdir_p(["d"])
-    d.get_subdir(["d"]).size_of_files = 4060174 + 8033020 + 5626152 + 7214296
-    
-    print(f"{d.get_total_size() = }")
-    
-    # d.get_subdir(["a", "e"]).size_of_files = 584
-    # print(d)
-    # print(d.get_subdir(["bar"]))
-    # print(d.get_subdir(["baz", "bar"]))

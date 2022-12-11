@@ -1,33 +1,45 @@
 from math import floor
+from aoc import *
 
-def prime_factors(n):
-    i = 2
-    factors = []
-    while i * i <= n:
-        if n % i:
-            i += 1
-        else:
-            n //= i
-            factors.append(i)
-    if n > 1:
-        factors.append(n)
-    return factors
+# primes_to_keep = [2, 3, 5, 7, 11, 13, 17, 19, 23]
 
 lines = []
 with open("input.txt") as file:
     for line in file:
         lines.append(line.strip("\n"))
 
+
 class Monkey:
-    # primes = [2, 3, 5, 7, 11, 13, 17, 19, 23]
-    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
+    # primes_to_keep = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+    # primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
+    monkey_divisors = []
+    monkey_factor = 1
     def __init__(self, starting_items, operation, test, true, false):
         self.items = starting_items
         self.operation = operation.split("=")[1]
         self.divisor = int(test.strip("divisible by "))
+        Monkey.monkey_divisors.append(self.divisor)
+        Monkey.monkey_divisors.sort()
+        Monkey.monkey_factor *= self.divisor
         self.true_destination = int(true.strip("throw to monkey "))
         self.false_destination = int(false.strip("throw to monkey "))
         self.inspections = 0
+    
+    def _find_factor(self, n):
+        factors = prime_factors(n)
+        
+        if n in factors:
+            factors.pop(factors.index(n))
+
+        for a in self.monkey_divisors:
+            if factors.count(a):
+                factors.pop(factors.index(a))
+        
+        factor = 1
+        for f in factors:
+            factor *= f
+
+        return factor
     
     def inspect(self):
         for i in range(len(self.items)):
@@ -45,22 +57,18 @@ class Monkey:
             else:
                 to = self.false_destination
             
-            # print(self.items[i])
-            # reduce angst
-            for prime in self.primes:
-                if self.items[i] < prime:
-                    break
-
-                quotient, remainder = divmod(self.items[i], prime)
-                while remainder == 0 and remainder > 1:
-                    self.items[i] = quotient
-                    quotient, remainder = divmod(self.items[i], prime)
-                
-                # quotient = number // divisor
-                # quotient, remainder = divmod(self.items[i], prime)
-                # while remainder == 0:
-                #     self.items[i] = quotient
-                #     quotient, remainder = divmod(self.items[i], prime)
+            # factors = get_repeated_prime_factors(self.items[i])
+            # factor = list_prod(factors)
+            # if not self.items[i] % factor == 0:
+            #     raise RuntimeError
+            # self.items[i] = self.items[i] // factor
+            
+            if self.items[i] > Monkey.monkey_factor**2:
+                factor = self._find_factor(self.items[i])
+                self.items[i] = self.items[i] // factor
+            
+            if to == self.true_destination:
+                assert(self.items[i] % self.divisor == 0)
 
             # to = int(op.strip("throw to monkey "))
             monkeys[to].items.append(self.items[i])
@@ -80,6 +88,15 @@ while i < len(lines):
     monkeys.append(Monkey(items, operation, test, true, false))
     
     i += 7
+
+print(f"{Monkey.monkey_divisors=}")
+print(f"{Monkey.monkey_factor=}")
+
+# == After round 20 ==
+# Monkey 0 inspected items 99 times.
+# Monkey 1 inspected items 97 times.
+# Monkey 2 inspected items 8 times.
+# Monkey 3 inspected items 103 times.
 
 n = 20
 print(f"n = {n}")

@@ -1,71 +1,62 @@
-import numpy as np
-from math import sqrt, copysign
-
-n = 1000
-tail_grid = np.zeros((n, n), dtype=int)
-head_grid = np.zeros((n, n), dtype=int)
+from math import floor
 
 lines = []
 with open("input.txt") as file:
     for line in file:
         lines.append(line.strip("\n"))
 
-# head and tail start at the same position
-hx = int(n/2)
-hy = int(n/2)
-tx = int(n/2)
-ty = int(n/2)
-
-head_grid[hx, hy] += 10
-tail_grid[tx, ty] += 10
-
-for line in lines:
-    move = line.split(" ")
-    direction = move[0]
-    length = int(move[1])
+class Monkey:
+    def __init__(self, starting_items, operation, test, true, false):
+        self.items = starting_items[::-1]  # REVERSE
+        self.operation = operation
+        self._test = test
+        self.true = true
+        self.false = false
+        self.inspections = 0
     
-    while length:
-        # update head
-        # to_update += sign
-        
-        if direction == "R":
-            hx += 1
-        elif direction == "L":
-            hx -= 1
-        elif direction == "D":
-            hy += 1
-        elif direction == "U":
-            hy -= 1
-        
-        if hx >= n or hy >= n or hx < 0 or hy < 0:
-            raise RuntimeError("Too small grid")
-        head_grid[hy, hx] += 1
-        
-        # update tail
-        distance = sqrt((hx - tx)**2 + (hy - ty)**2)
-        if distance > sqrt(2):
-            # move tail
-            dx = hx - tx
-            dy = hy - ty
-            if dx:
-                tx += 1 if dx > 0 else -1
-            if dy:
-                ty += 1 if dy > 0 else -1
-            
-            if tx >= n or ty >= n or tx < 0 or ty < 0:
-                raise RuntimeError("Too small grid")
-        
-            tail_grid[ty, tx] += 1
-        
-        length -= 1
+    def inspect(self):
+        for i in range(len(self.items)):
+            old = self.items[i]
+            self.items[i] = eval(self.operation.split("=")[1])
+            self.items[i] = floor(self.items[i] / 3.0)
+            self.inspections += 1
 
-if False:
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
-    im = ax.imshow(tail_grid)
-    # im = ax.imshow(head_grid)
-    # ax.grid()
-    plt.show()
+    def test(self, monkeys):
+        for i in list(range(len(self.items)))[::-1]: # REVERSE
+            test = int(self._test.strip("divisible by "))
+            item = self.items[i]
+            if item % test == 0:
+                op = self.true
+            else:
+                op = self.false
 
-# print(tail_grid)
-print(f"First star: {np.sum(np.sum(tail_grid > 0))}")
+            to = int(op.strip("throw to monkey "))
+            monkeys[to].items.append(item)
+            self.items.pop(i)
+
+monkeys = []
+
+# starting conditions
+i = 0
+while i < len(lines):
+    items = lines[i+1].split()[2:]
+    items = [int(item.strip(",")) for item in items]
+    operation = lines[i+2].split(": ")[1]
+    test = lines[i+3].split(": ")[1]
+    true = lines[i+4].split(": ")[1]
+    false = lines[i+5].split(": ")[1]
+    monkeys.append(Monkey(items, operation, test, true, false))
+    
+    i += 7
+
+# divide worry level by 3 (and round down to nearest int) after inspection (before test)
+
+for i in range(20):
+    for monkey in monkeys:
+        monkey.inspect()
+        monkey.test(monkeys)
+
+inspections = [monkey.inspections for monkey in monkeys]
+inspections.sort()
+print(inspections)
+print(inspections[-1] * inspections[-2])

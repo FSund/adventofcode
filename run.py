@@ -7,31 +7,28 @@ with open("input.txt") as file:
 
 class Monkey:
     def __init__(self, starting_items, operation, test, true, false):
-        self.items = starting_items[::-1]  # REVERSE
-        self.operation = operation
-        self._test = test
-        self.true = true
-        self.false = false
+        self.items = starting_items
+        self.operation = operation.split("=")[1]
+        self._test = int(test.strip("divisible by "))
+        self.true = int(true.strip("throw to monkey "))
+        self.false = int(false.strip("throw to monkey "))
         self.inspections = 0
     
     def inspect(self):
         for i in range(len(self.items)):
             old = self.items[i]
-            self.items[i] = eval(self.operation.split("=")[1])
+            self.items[i] = eval(self.operation)
             self.items[i] = floor(self.items[i] / 3.0)
             self.inspections += 1
 
     def test(self, monkeys):
-        for i in list(range(len(self.items)))[::-1]: # REVERSE
-            test = int(self._test.strip("divisible by "))
+        for i in reversed(range(len(self.items))):
+            test = self._test
             item = self.items[i]
             if item % test == 0:
-                op = self.true
+                monkeys[self.true].items.append(item)
             else:
-                op = self.false
-
-            to = int(op.strip("throw to monkey "))
-            monkeys[to].items.append(item)
+                monkeys[self.false].items.append(item)
             self.items.pop(i)
 
 monkeys = []
@@ -58,5 +55,4 @@ for i in range(20):
 
 inspections = [monkey.inspections for monkey in monkeys]
 inspections.sort()
-print(inspections)
-print(inspections[-1] * inspections[-2])
+print(inspections[-1] * inspections[-2])  # 110888

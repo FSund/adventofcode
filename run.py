@@ -195,7 +195,5 @@ if __name__ == "__main__":
         dy = child.position[1] - parent.position[1]
         return (dx ** 2) + (dy ** 2)
 
-    height[end[0], end[1]] = ord('a')
-    path = astar(maze, height, start, end, heuristic=heuristic, visualize=True)
-    print(path)
+    path = astar(maze, height, start, end, heuristic=heuristic)
     print(len(path[1:]))

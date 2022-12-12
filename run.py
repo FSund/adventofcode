@@ -207,15 +207,20 @@ if __name__ == "__main__":
         # L2 norm
         # return (dx ** 2) + (dy ** 2)
         
-        # L1 norm
-        return abs(dx) + abs(dy)
+        # L1 norm -- use this for star 1
+        # return abs(dx) + abs(dy)
         
-        # return 1
+        # use this for star 2?
+        return 1
 
-    path = astar(maze, height, start, end, viz=False, heuristic=heuristic)
-    # print(path)
-    print(len(path[1:]))
+    # star 1
+    if False:
+        path = astar(maze, height, start, end, viz=False, heuristic=heuristic)
+        print(len(path[1:]))
     
-    # 441
-    # That's not the right answer; your answer is too high. 
-    # 440 too high
+    # star 2
+    start2 = (end[0], end[1])
+    end2 = (start[0], start[1])
+    path = astar(maze, height, start2, end2, viz=False, heuristic=heuristic)
+    print(path)
+    print(len(path))

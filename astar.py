@@ -104,6 +104,9 @@ def astar(maze, height, start, end, heuristic, viz=False, allow_diagonal_movemen
             # plt.pause(10)
             return return_path(current_node)
         
+        if height[current_node.position[0], current_node.position[1]] == ord('a'):
+            return return_path(current_node)
+        
         if viz:
             im.set_data(grid)
             fig.canvas.flush_events()
@@ -124,10 +127,11 @@ def astar(maze, height, start, end, heuristic, viz=False, allow_diagonal_movemen
             # if maze[node_position[0]][node_position[1]] != 0:
             #     continue
             
-            # Ensure elevation increase is max 1
+            # Ensure elevation decrease is max 1
+            # (since we are searching backwards)
             current_height = height[current_node.position[0], current_node.position[1]]
             new_height = height[node_position[0], node_position[1]]
-            if new_height - current_height > 1:
+            if new_height - current_height < -1:
                 continue
 
             # Create new node

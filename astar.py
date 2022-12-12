@@ -42,7 +42,7 @@ def return_path(current_node):
 
 
 # https://gist.github.com/ryancollingwood/32446307e976a11a1185a5394d6657bc
-def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_movement = False):
+def astar(maze, height, start, end, heuristic, viz=False, allow_diagonal_movement = False):
     """
     Returns a list of tuples as a path from the given start to the given end in the given maze
     :param maze:
@@ -52,11 +52,14 @@ def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_m
     """
     
     # visualize
-    if visualize:
+    if viz:
         grid = np.zeros((len(maze), len(maze[0])))
         plt.ion()
         fig, ax = plt.subplots()
-        im = ax.imshow(grid, vmin=ord('a')-1, vmax=ord('z'))
+        if viz == 1:
+            im = ax.imshow(grid, vmin=0, vmax=10)
+        elif viz == 2:
+            im = ax.imshow(grid, vmin=ord('a')-1, vmax=ord('z'))
 
     # Create start and end node
     start_node = Node(None, start)
@@ -98,9 +101,10 @@ def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_m
 
         # Found the goal
         if current_node == end_node:
+            # plt.pause(10)
             return return_path(current_node)
         
-        if visualize:
+        if viz:
             im.set_data(grid)
             fig.canvas.flush_events()
 
@@ -147,10 +151,11 @@ def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_m
             if len([open_node for open_node in open_list if child.position == open_node.position and child.g > open_node.g]) > 0:
                 continue
 
-            if visualize:
-                grid[child.position[0], child.position[1]] = height[child.position[0], child.position[1]]
-                # im.set_data(grid)
-                # fig.canvas.flush_events()
+            if viz:
+                if viz == 1:
+                    grid[child.position[0], child.position[1]] += 1
+                elif viz == 2:
+                    grid[child.position[0], child.position[1]] = height[child.position[0], child.position[1]]
 
             # Add the child to the open list
             heapq.heappush(open_list, child)

@@ -205,13 +205,15 @@ if __name__ == "__main__":
         dy = end[1] - child.position[1]
         
         # L2 norm
-        return (dx ** 2) + (dy ** 2)
+        # return (dx ** 2) + (dy ** 2)
         
         # L1 norm
-        # return abs(dx) + abs(dy)
+        return abs(dx) + abs(dy)
+        
+        # return 1
 
-    height[start[0], start[1]] = ord('z')
-    path = astar(maze, height, start, end, visualize=True, heuristic=heuristic)
+    path = astar(maze, height, start, end, viz=1, heuristic=heuristic)
+    # print(path)
     print(len(path[1:]))
     
     # 441

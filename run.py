@@ -212,7 +212,7 @@ if __name__ == "__main__":
         
         # return 1
 
-    path = astar(maze, height, start, end, viz=1, heuristic=heuristic)
+    path = astar(maze, height, start, end, viz=False, heuristic=heuristic)
     # print(path)
     print(len(path[1:]))
     

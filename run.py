@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from math import sqrt
 import time
 from warnings import warn
-from astar import astar, astar_dec12
+from astar import astar
 
 
 def find_next_position(height, i, j, end):
@@ -136,16 +136,18 @@ if __name__ == "__main__":
     # find start and end
     m = len(lines)
     n = len(lines[0])
-    start = [0, 0]
-    end = [0, 0]
+    start = None
+    end = None
     for i in range(m):
         if "S" in lines[i]:
-            start[0] = i
-            start[1] = lines[i].index("S")
+            # start[0] = i
+            # start[1] = lines[i].index("S")
+            start = (i, lines[i].index("S"))
             # lines[i][start[1]] = "a"
         if "E" in lines[i]:
-            end[0] = i
-            end[1] = lines[i].index("E")
+            # end[0] = i
+            # end[1] = lines[i].index("E")
+            end = (i, lines[i].index("E"))
             # lines[i][end[1]] = "z"
 
     height = np.empty((m, n), dtype=int)
@@ -179,4 +181,19 @@ if __name__ == "__main__":
     
     # path = astar_dec12(height, start, end)
     maze = np.zeros((m, n), dtype=int)
-    path = astar(maze, start, end)
+    # def heuristic(parent, child):
+    #     child_height = height[child.position[0], child.position[1]]
+    #     parent_height = height[parent.position[0], parent.position[1]]
+    #     if child_height - parent_height > 1:
+    #         return int(1e9)
+    #     else:
+    #         dx = child.position[0] - parent.position[0]
+    #         dy = child.position[1] - parent.position[1]
+    #         return (dx ** 2) + (dy ** 2)
+    def heuristic(parent, child):
+        dx = child.position[0] - parent.position[0]
+        dy = child.position[1] - parent.position[1]
+        return (dx ** 2) + (dy ** 2)
+
+    path = astar(maze, height, start, end, heuristic=heuristic)
+    print(len(path[1:]))

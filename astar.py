@@ -2,6 +2,8 @@
 # as found at https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 from warnings import warn
 import heapq
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Node:
     """
@@ -40,7 +42,7 @@ def return_path(current_node):
 
 
 # https://gist.github.com/ryancollingwood/32446307e976a11a1185a5394d6657bc
-def astar(maze, start, end, allow_diagonal_movement = False):
+def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_movement = False):
     """
     Returns a list of tuples as a path from the given start to the given end in the given maze
     :param maze:
@@ -48,6 +50,13 @@ def astar(maze, start, end, allow_diagonal_movement = False):
     :param end:
     :return:
     """
+    
+    # visualize
+    if visualize:
+        grid = np.zeros((len(maze), len(maze[0])))
+        plt.ion()
+        fig, ax = plt.subplots()
+        im = ax.imshow(grid, vmin=0, vmax=10)
 
     # Create start and end node
     start_node = Node(None, start)
@@ -65,7 +74,8 @@ def astar(maze, start, end, allow_diagonal_movement = False):
 
     # Adding a stop condition
     outer_iterations = 0
-    max_iterations = (len(maze[0]) * len(maze) // 2)
+    # max_iterations = (len(maze[0]) * len(maze) // 2)
+    max_iterations = 1e6
 
     # what squares do we search
     adjacent_squares = ((0, -1), (0, 1), (-1, 0), (1, 0),)
@@ -103,7 +113,12 @@ def astar(maze, start, end, allow_diagonal_movement = False):
                 continue
 
             # Make sure walkable terrain
-            if maze[node_position[0]][node_position[1]] != 0:
+            # if maze[node_position[0]][node_position[1]] != 0:
+            #     continue
+            
+            current_height = height[current_node.position[0], current_node.position[1]]
+            new_height = height[node_position[0], node_position[1]]
+            if new_height - current_height > 1:
                 continue
 
             # Create new node
@@ -120,17 +135,25 @@ def astar(maze, start, end, allow_diagonal_movement = False):
 
             # Create the f, g, and h values
             child.g = current_node.g + 1
-            child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
+            child.h = heuristic(current_node, child)
             child.f = child.g + child.h
 
             # Child is already in the open list
             if len([open_node for open_node in open_list if child.position == open_node.position and child.g > open_node.g]) > 0:
                 continue
 
+            if visualize:
+                grid[child.position[0], child.position[1]] += 1        
+                im.set_data(grid)
+                fig.canvas.flush_events()
+
             # Add the child to the open list
             heapq.heappush(open_list, child)
 
+    plt.show()
     warn("Couldn't get a path to destination")
+    print(f"{current_node=}")
+    print(f"{end=}")
     return None
 
 

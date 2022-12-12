@@ -20,15 +20,15 @@ class Node:
         return self.position == other.position
     
     def __repr__(self):
-      return f"{self.position} - g: {self.g} h: {self.h} f: {self.f}"
+        return f"{self.position} - g: {self.g} h: {self.h} f: {self.f}"
 
     # defining less than for purposes of heap queue
     def __lt__(self, other):
-      return self.f < other.f
+        return self.f < other.f
     
     # defining greater than for purposes of heap queue
     def __gt__(self, other):
-      return self.f > other.f
+        return self.f > other.f
 
 def return_path(current_node):
     path = []
@@ -39,6 +39,7 @@ def return_path(current_node):
     return path[::-1]  # Return reversed path
 
 
+# https://gist.github.com/ryancollingwood/32446307e976a11a1185a5394d6657bc
 def astar(maze, start, end, allow_diagonal_movement = False):
     """
     Returns a list of tuples as a path from the given start to the given end in the given maze
@@ -76,10 +77,10 @@ def astar(maze, start, end, allow_diagonal_movement = False):
         outer_iterations += 1
 
         if outer_iterations > max_iterations:
-          # if we hit this point return the path such as it is
-          # it will not contain the destination
-          warn("giving up on pathfinding too many iterations")
-          return return_path(current_node)       
+            # if we hit this point return the path such as it is
+            # it will not contain the destination
+            warn("giving up on pathfinding too many iterations")
+            return return_path(current_node)       
         
         # Get the current node
         current_node = heapq.heappop(open_list)
@@ -102,13 +103,7 @@ def astar(maze, start, end, allow_diagonal_movement = False):
                 continue
 
             # Make sure walkable terrain
-            # if maze[node_position[0]][node_position[1]] != 0:
-            #     continue
-            
-            # make sure max height difference is 1
-            current_height = maze[current_node.position[0]][current_node.position[1]]
-            new_height = maze[node_position[0]][node_position[1]]
-            if new_height - current_height > 1:
+            if maze[node_position[0]][node_position[1]] != 0:
                 continue
 
             # Create new node
@@ -138,6 +133,7 @@ def astar(maze, start, end, allow_diagonal_movement = False):
     warn("Couldn't get a path to destination")
     return None
 
+
 def example(print_maze = True):
 
     maze = [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,] * 2,
@@ -166,15 +162,15 @@ def example(print_maze = True):
       for step in path:
         maze[step[0]][step[1]] = 2
       
-      for row in maze:
-        line = []
-        for col in row:
-          if col == 1:
-            line.append("\u2588")
-          elif col == 0:
-            line.append(" ")
-          elif col == 2:
-            line.append(".")
+        for row in maze:
+            line = []
+            for col in row:
+                if col == 1:
+                    line.append("\u2588")
+                elif col == 0:
+                    line.append(" ")
+                elif col == 2:
+                    line.append(".")
         print("".join(line))
 
     print(path)

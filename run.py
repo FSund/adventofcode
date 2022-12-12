@@ -190,10 +190,30 @@ if __name__ == "__main__":
     #         dx = child.position[0] - parent.position[0]
     #         dy = child.position[1] - parent.position[1]
     #         return (dx ** 2) + (dy ** 2)
-    def heuristic(parent, child):
-        dx = child.position[0] - parent.position[0]
-        dy = child.position[1] - parent.position[1]
-        return (dx ** 2) + (dy ** 2)
+    
+    # def heuristic(parent, child):
+    #     # h(n) is a heuristic function that estimates the cost of the
+    #     # cheapest path from n to the goal
+    #     dx = child.position[0] - parent.position[0]
+    #     dy = child.position[1] - parent.position[1]
+    #     return (dx ** 2) + (dy ** 2)
 
-    path = astar(maze, height, start, end, heuristic=heuristic)
+    def heuristic(parent, child):
+        # h(n) is a heuristic function that estimates the cost of the
+        # cheapest path from n to the goal
+        dx = end[0] - child.position[0]
+        dy = end[1] - child.position[1]
+        
+        # L2 norm
+        return (dx ** 2) + (dy ** 2)
+        
+        # L1 norm
+        # return abs(dx) + abs(dy)
+
+    height[start[0], start[1]] = ord('z')
+    path = astar(maze, height, start, end, visualize=True, heuristic=heuristic)
     print(len(path[1:]))
+    
+    # 441
+    # That's not the right answer; your answer is too high. 
+    # 440 too high

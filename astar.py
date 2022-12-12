@@ -56,7 +56,7 @@ def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_m
         grid = np.zeros((len(maze), len(maze[0])))
         plt.ion()
         fig, ax = plt.subplots()
-        im = ax.imshow(grid, vmin=0, vmax=10)
+        im = ax.imshow(grid, vmin=ord('a')-1, vmax=ord('z'))
 
     # Create start and end node
     start_node = Node(None, start)
@@ -99,6 +99,10 @@ def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_m
         # Found the goal
         if current_node == end_node:
             return return_path(current_node)
+        
+        if visualize:
+            im.set_data(grid)
+            fig.canvas.flush_events()
 
         # Generate children
         children = []
@@ -116,6 +120,7 @@ def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_m
             # if maze[node_position[0]][node_position[1]] != 0:
             #     continue
             
+            # Ensure elevation increase is max 1
             current_height = height[current_node.position[0], current_node.position[1]]
             new_height = height[node_position[0], node_position[1]]
             if new_height - current_height > 1:
@@ -143,9 +148,9 @@ def astar(maze, height, start, end, heuristic, visualize=False, allow_diagonal_m
                 continue
 
             if visualize:
-                grid[child.position[0], child.position[1]] += 1        
-                im.set_data(grid)
-                fig.canvas.flush_events()
+                grid[child.position[0], child.position[1]] = height[child.position[0], child.position[1]]
+                # im.set_data(grid)
+                # fig.canvas.flush_events()
 
             # Add the child to the open list
             heapq.heappush(open_list, child)

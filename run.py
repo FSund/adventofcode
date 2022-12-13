@@ -15,31 +15,34 @@
 def compare(left, right):
     # an element of a packet can be "1", "[]" or "None" (if packet = "[]")
     
+    # If the left integer is lower than the right integer, the inputs are in the right order. 
+    # If the left integer is higher than the right integer, the inputs are not in the right order. 
+    # Otherwise, the inputs are the same integer; continue checking the next part of the input.
     if isinstance(left, int) and isinstance(right, int):
-        if left < right:
-            return True
-        elif left > right:
-            return False
-        else:
+        if left == right:
             return None
+        else:
+            return left < right
 
-    if isinstance(left, list) and isinstance(right, list):
+    elif isinstance(left, list) and isinstance(right, list):
         # If the lists are the same length and no comparison makes a decision about the order,
         # continue checking the next part of the input.
-        left_empty = False
-        right_empty = False
         while True:
             # If the left list runs out of items first, the inputs are in the right order
             try:
                 new_left = left.pop(0)
             except IndexError:
                 left_empty = True
+            else:
+                left_empty = False
             
             try:
                 new_right = right.pop(0)
             except IndexError:
                 right_empty = True
-                
+            else:
+                right_empty = False
+
             if left_empty and not right_empty:
                 return True
             if right_empty and not left_empty:
@@ -48,16 +51,18 @@ def compare(left, right):
                 return None
             
             out = compare(new_left, new_right)
-            if out is not None:
+            if out is None:
+                continue
+            else:
                 return out
 
-    if isinstance(left, list) and isinstance(right, int):
+    elif isinstance(left, list) and isinstance(right, int):
         return compare(left, [right])
 
-    if isinstance(left, int) and isinstance(right, list):
+    elif isinstance(left, int) and isinstance(right, list):
         return compare([left], right)
     
-    return False
+    raise RuntimeError
 
 
 if __name__ == "__main__":
@@ -90,12 +95,15 @@ if __name__ == "__main__":
             
         #     i += 1
         
-        if compare(p1, p2):
+        result = compare(p1, p2)
+        if result is None:
+            raise RuntimeError
+        if result:
             print(f"right order: {idx} ({lines[p1_idx]} and {lines[p2_idx]})")
             right_order.append(idx)
     
         idx += 1
-        if 3*idx >= len(lines):
+        if 3*(idx - 1) >= len(lines):
             break
     
     print(f"first star: {sum(right_order)}")

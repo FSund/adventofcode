@@ -96,7 +96,7 @@ def star1():
         
         result = p1 < p2
         if result:
-            print(f"right order: {idx} ({lines[p1_idx]} and {lines[p2_idx]})")
+            # print(f"right order: {idx} ({lines[p1_idx]} and {lines[p2_idx]})")
             right_order.append(idx)
     
         idx += 1
@@ -148,7 +148,7 @@ def testing():
 
 if __name__ == "__main__":
     # Your puzzle answer was 5340.
-    # star1()
+    star1()
     
     # testing()
     

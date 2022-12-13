@@ -104,9 +104,6 @@ def astar(maze, height, start, end, heuristic, viz=False, allow_diagonal_movemen
             # plt.pause(10)
             return return_path(current_node)
         
-        if height[current_node.position[0], current_node.position[1]] == ord('a'):
-            return return_path(current_node)
-        
         if viz:
             im.set_data(grid)
             fig.canvas.flush_events()
@@ -127,11 +124,10 @@ def astar(maze, height, start, end, heuristic, viz=False, allow_diagonal_movemen
             # if maze[node_position[0]][node_position[1]] != 0:
             #     continue
             
-            # Ensure elevation decrease is max 1
-            # (since we are searching backwards)
+            # Ensure elevation increase is max 1
             current_height = height[current_node.position[0], current_node.position[1]]
             new_height = height[node_position[0], node_position[1]]
-            if new_height - current_height < -1:
+            if new_height - current_height > 1:
                 continue
 
             # Create new node
@@ -211,6 +207,86 @@ def example(print_maze = True):
         print("".join(line))
 
     print(path)
+
+
+class BFSNode:
+    def __init__(self, position, parent):
+        self.position = position
+    
+    def __eq__(self, other):
+        return self.position == other.position
+
+
+def backtrace_bfs(parent, start, end):
+    path = [end]
+    while path[-1] != start:
+        path.append(parent[path[-1]])
+    path.reverse()
+    return path
+
+
+def find_a_bfs(maze, height, start, viz=False):
+    visited = set() # to keep track of already visited nodes
+    bfs_traversal = list()  # the BFS traversal result
+    queue = list()  # queue
+    parent = {}  # dict
+    
+    # push the root node to the queue and mark it as visited
+    queue.append(start)
+    visited.add(start)
+    
+    adjacent = ((0, -1), (0, 1), (-1, 0), (1, 0),)
+    
+    # visualize
+    if viz:
+        grid = np.zeros((len(maze), len(maze[0])))
+        plt.ion()
+        fig, ax = plt.subplots()
+        if viz == 1:
+            im = ax.imshow(grid, vmin=0, vmax=10)
+        elif viz == 2:
+            im = ax.imshow(grid, vmin=ord('a')-1, vmax=ord('z'))
+    
+    # loop until the queue is empty
+    while queue:
+        # pop the front node of the queue and add it to bfs_traversal
+        current_node = queue.pop(0)
+        bfs_traversal.append(current_node)
+        
+        if height[current_node[0], current_node[1]] == ord('a'):
+            return backtrace_bfs(parent, start, current_node)
+        
+        if viz:
+            if viz == 1:
+                grid[current_node[0], current_node[1]] += 1
+            elif viz == 2:
+                grid[current_node[0], current_node[1]] = height[current_node[0], current_node[1]]
+            im.set_data(grid)
+            fig.canvas.flush_events()
+        
+        # check all the neighbour nodes of the current node
+        for translation in adjacent:
+            position = (current_node[0] + translation[0], current_node[1] + translation[1])
+            
+            # Make sure within range
+            if position[0] > (len(maze) - 1) or position[0] < 0 or position[1] > (len(maze[0]) - 1) or position[1] < 0:
+                continue
+            
+            # Ensure elevation decrease is max 1
+            # (since we are searching backwards)
+            current_height = height[current_node[0], current_node[1]]
+            new_height = height[position[0], position[1]]
+            if new_height - current_height < -1:
+                continue
+
+            # if the neighbour nodes are not already visited, 
+            # push them to the queue and mark them as visited
+            if position not in visited:
+                visited.add(position)
+                queue.append(position)
+                parent[position] = current_node
+
+    return bfs_traversal
     
 if __name__ == "__main__":
     example()

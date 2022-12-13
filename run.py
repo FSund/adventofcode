@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from math import sqrt
 import time
 from warnings import warn
-from astar import astar
+from astar import astar, find_a_bfs
 
 
 def find_next_position(height, i, j, end):
@@ -208,19 +208,45 @@ if __name__ == "__main__":
         # return (dx ** 2) + (dy ** 2)
         
         # L1 norm -- use this for star 1
-        # return abs(dx) + abs(dy)
+        return abs(dx) + abs(dy)
         
         # use this for star 2?
-        return 1
+        # return 1
 
     # star 1
     if False:
         path = astar(maze, height, start, end, viz=False, heuristic=heuristic)
-        print(len(path[1:]))
+        print(f"Star 1: {len(path[1:])}")
     
     # star 2
     start2 = (end[0], end[1])
     end2 = (start[0], start[1])
-    path = astar(maze, height, start2, end2, viz=False, heuristic=heuristic)
-    print(path)
-    print(len(path))
+    
+    if False:
+        path = astar(maze, height, start2, end2, viz=False, heuristic=heuristic)
+        print(path)
+        print(len(path))
+    
+    if True:
+        path = find_a_bfs(maze, height, start2, viz=1)
+        # print(path)
+        print(f"Star 2: {len(path)-1}")
+        
+        grid = np.zeros((len(maze), len(maze[0])))
+        for p in path:
+            grid[p[0], p[1]] += 1
+        
+        plt.ion()
+        fig, ax = plt.subplots()
+        im = ax.imshow(grid)
+        
+        fig, ax = plt.subplots()
+        im = ax.imshow(height)
+        
+        plt.show()
+        plt.pause(5)
+    
+    print(len(height == ord('a')))
+    
+    # 364 too low
+    # 419 too high

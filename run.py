@@ -107,35 +107,72 @@ def parse_input():
     return frame
 
 
-def step(frame, pos, source=[0, 500]):
+def step(frame, pos, source=(0, 500)):
+    # 0 is empty
+    # 1 is wall
+    # 2 is moving sand
+    # 3 is static sand
+    
     new_sand = False
-    if frame[pos[0]+1, pos[1]] == 0:
-        frame[pos[0], pos[1]] = 0
-        pos = [pos[0]+1, pos[1]]
+    if not len(pos):
+        # spawn sand
+        pos = [source[0]+1, source[1]]
         frame[pos[0], pos[1]] = 2
-    elif frame[pos[0]+1, pos[1]-1] == 0:
-        frame[pos[0], pos[1]] = 0
-        pos = [pos[0]+1, pos[1]-1]
-        frame[pos[0], pos[1]] = 2
-    elif frame[pos[0]+1, pos[1]+1] == 0:
-        frame[pos[0], pos[1]] = 0
-        pos = [pos[0]+1, pos[1]+1]
-        frame[pos[0], pos[1]] = 2
-    else:
-        # sand has arrived at final destination
-        frame[pos[0], pos[1]] = 1
-        pos = source
         new_sand = True
+    else:
+        # check if done
+        if sum(frame[pos[0]+1:, pos[1]] > 0) == 0:
+            raise RuntimeError
+
+        i = np.argmax(frame[pos[0]+1:, pos[1]] > 0)
+        # print(i)
+        if i > 0:
+            frame[pos[0], pos[1]] = 0
+            pos[0] += i
+            frame[pos[0], pos[1]] = 2
+        elif frame[pos[0]+1, pos[1]-1] == 0:
+            frame[pos[0], pos[1]] = 0
+            pos[0] += 1
+            pos[1] -= 1
+            # pos = [pos[0]+1, pos[1]-1]
+            frame[pos[0], pos[1]] = 2
+        elif frame[pos[0]+1, pos[1]+1] == 0:
+            frame[pos[0], pos[1]] = 0
+            pos[0] += 1
+            pos[1] += 1
+            # pos = [pos[0]+1, pos[1]+1]
+            frame[pos[0], pos[1]] = 2
+        else:
+            # sand has arrived at final destination
+            frame[pos[0], pos[1]] = 3
+            # pos = [source[0]+1, source[1]]
+            # frame[pos[0], pos[1]] = 2
+            pos = []
     
     return pos, new_sand
-            
+
+
+def print_np_frame(frame):
+    for i in range(frame.shape[0]):
+        line = f"{i} "
+        for j in range(frame.shape[1]):
+            if frame[i][j] == 0:
+                line += "."
+            elif frame[i][j] == 1:
+                line += "#"
+            elif frame[i][j] == 2:
+                line += "o"
+            elif frame[i][j] == 3:
+                line += "x"
+        print(line)
+
     
 if __name__ == "__main__":
     input = parse_input()
     for i in range(len(input)):
         row = "".join([input[i][j] for j in range(494, 504)])
         
-        print(f"{i} {row}")
+        # print(f"{i} {row}")
 
     frame = np.zeros((len(input), len(input[0])))
     sources = []
@@ -147,13 +184,14 @@ if __name__ == "__main__":
                 frame[i,j] = 1
             elif input[i][j] == "+":
                 frame[i,j] = 0
-                sources.append([i, j])
+                sources.append((i, j))
 
     
-    print(frame[:, 494:])
-    moving_sand = sources[0]
+    # print(frame[:, 494:])
+    moving_sand = []
     sand_count = 0
-    while sand_count < 25:
+    # print_np_frame(frame[:, 494:])
+    while True:
         try:
             moving_sand, new_sand = step(frame, moving_sand, sources[0])
         except:
@@ -161,5 +199,11 @@ if __name__ == "__main__":
         sand_count += new_sand
         # print(moving_sand)
         # print(frame[:, 494:])
+        # print_np_frame(frame[:, 494:])
         
-    print(frame[:, 494:])
+    # remove final sand that goes into the abyss
+    sand_count -= 1
+
+    # print(frame[:, 494:])
+    print_np_frame(frame[:, 494:])
+    print(f"star 1: {sand_count}")

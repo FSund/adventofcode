@@ -2,6 +2,23 @@ class Packet:
     def __init__(self, value):
         self.value = value
     
+    @staticmethod
+    def _make_left_right(this, other):
+        if isinstance(this.value, list) and isinstance(other.value, list):
+            # use Python's built-in list comparison
+            left = [Packet(p) for p in this.value]
+            right = [Packet(p) for p in other.value]
+        
+        if isinstance(other.value, int):
+            left = this
+            right = Packet([other.value])
+
+        if isinstance(this.value, int):
+            left = Packet([this.value])
+            right = other
+            
+        return left, right
+    
     # for nice printing
     def __repr__(self):
         return f"{self.value}"
@@ -10,41 +27,17 @@ class Packet:
     def __lt__(self, other):
         if isinstance(self.value, int) and isinstance(other.value, int):
             return self.value < other.value
-        
-        if isinstance(self.value, list) and isinstance(other.value, list):
-            # use Python's built-in list comparison
-            left = [Packet(p) for p in self.value]
-            right = [Packet(p) for p in other.value]
-        
-        if isinstance(other.value, int):
-            left = self
-            right = Packet([other.value])
-
-        if isinstance(self.value, int):
-            left = Packet([self.value])
-            right = other
-        
-        return left < right
+        else:
+            left, right = self._make_left_right(self, other)
+            return left < right
 
     # equal (==)
     def __eq__(self, other):
         if isinstance(self.value, int) and isinstance(other.value, int):
             return self.value == other.value
-        
-        if isinstance(self.value, list) and isinstance(other.value, list):
-            # use Python's built-in list comparison
-            left = [Packet(p) for p in self.value]
-            right = [Packet(p) for p in other.value]
-        
-        if isinstance(other.value, int):
-            left = self
-            right = Packet([other.value])
-
-        if isinstance(self.value, int):
-            left = Packet([self.value])
-            right = other
-        
-        return left == right
+        else:
+            left, right = self._make_left_right(self, other)
+            return left == right
 
 
 def star1():

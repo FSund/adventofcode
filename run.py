@@ -154,7 +154,7 @@ def step(frame, pos, source=(0, 500)):
 
 def print_np_frame(frame):
     for i in range(frame.shape[0]):
-        line = f"{i} "
+        line = f"{i:3d} "
         for j in range(frame.shape[1]):
             if frame[i][j] == 0:
                 line += "."
@@ -206,4 +206,4 @@ if __name__ == "__main__":
 
     # print(frame[:, 494:])
     print_np_frame(frame[:, 494:])
-    print(f"star 1: {sand_count}")
+    print(f"star 1: {sand_count}")  # 828

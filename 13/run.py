@@ -2,76 +2,49 @@ class Packet:
     def __init__(self, value):
         self.value = value
     
+    # for nice printing
     def __repr__(self):
         return f"{self.value}"
     
-    # less than
+    # less than (<)
     def __lt__(self, other):
         if isinstance(self.value, int) and isinstance(other.value, int):
-            # print("case int int")
             return self.value < other.value
         
-        if isinstance(self.value, list) and isinstance(other.value, int):
-            # print("case list int")
-            other.value = [other.value]
-            return self < other
-
-        if isinstance(self.value, int) and isinstance(other.value, list):
-            # print("case int list")
-            self.value = [self.value]
-            return self < other
-        
         if isinstance(self.value, list) and isinstance(other.value, list):
-            # print("case list list")
-            for left, right in zip(self.value, other.value):
-                left = Packet(left) 
-                right = Packet(right)
-                if left == right:
-                    continue
-                else:
-                    return left < right
-            
-            # If the left list runs out of items first, the inputs are in the right order.
-            if len(self.value) < len(other.value):
-                return True
-            else:
-                return False
+            # use Python's built-in list comparison
+            left = [Packet(p) for p in self.value]
+            right = [Packet(p) for p in other.value]
         
-        raise RuntimeError
+        if isinstance(other.value, int):
+            left = self
+            right = Packet([other.value])
 
+        if isinstance(self.value, int):
+            left = Packet([self.value])
+            right = other
+        
+        return left < right
+
+    # equal (==)
     def __eq__(self, other):
         if isinstance(self.value, int) and isinstance(other.value, int):
-            # print("case int int")
             return self.value == other.value
         
-        if isinstance(self.value, list) and isinstance(other.value, int):
-            # print("case list int")
-            other.value = [other.value]
-            return self == other
-
-        if isinstance(self.value, int) and isinstance(other.value, list):
-            # print("case int list")
-            self.value = [self.value]
-            return self == other
-        
         if isinstance(self.value, list) and isinstance(other.value, list):
-            equal = True
-            for left, right in zip(self.value, other.value):
-                left = Packet(left) 
-                right = Packet(right)
-                if left == right:
-                    pass
-                else:
-                    equal = False
-            if equal:
-                if len(self.value) == len(other.value):
-                    return True
-                else:
-                    return False
-            else:
-                return False
+            # use Python's built-in list comparison
+            left = [Packet(p) for p in self.value]
+            right = [Packet(p) for p in other.value]
         
-        raise RuntimeError
+        if isinstance(other.value, int):
+            left = self
+            right = Packet([other.value])
+
+        if isinstance(self.value, int):
+            left = Packet([self.value])
+            right = other
+        
+        return left == right
 
 
 def star1():
@@ -102,9 +75,9 @@ def star1():
         idx += 1
         if 3*(idx - 1) >= len(lines):
             break
-    
-    print(f"first star: {sum(right_order)}")
+
     # 5190 too low
+    return sum(right_order)
 
 
 def star2():
@@ -133,7 +106,8 @@ def star2():
             i1 = idx+1
         if p.value == [[6]]:
             i2 = idx+1
-    print(f"star 2: {i1*i2}")
+    
+    return i1*i2
 
 
 def testing():
@@ -148,8 +122,12 @@ def testing():
 
 if __name__ == "__main__":
     # Your puzzle answer was 5340.
-    star1()
+    v1 = star1()
+    print(f"first star: {v1}")
+    assert(v1 == 5340)
     
     # testing()
     
-    star2()
+    v2 = star2()
+    print(f"star 2: {v2}")
+    assert(v2 == 21276)

@@ -46,8 +46,12 @@ def parse_input():
             lines.append(line.strip("\n"))
 
     x_min, x_max, y_min, y_max = find_boundaries(lines)
-    x_min -= 1
-    x_max += 1
+    print(f"{x_min = }")
+    print(f"{x_max = }")
+    # x_min -= 1
+    # x_max += 1
+    x_min = 0
+    x_max = 1000
     y_min -= 1
     y_max += 1
     # y_min = 0
@@ -116,7 +120,7 @@ def step(frame, pos, source=(0, 500)):
     new_sand = False
     if not len(pos):
         # spawn sand
-        pos = [source[0]+1, source[1]]
+        pos = [source[0], source[1]]
         frame[pos[0], pos[1]] = 2
         new_sand = True
     else:
@@ -166,14 +170,9 @@ def print_np_frame(frame):
                 line += "x"
         print(line)
 
-    
-if __name__ == "__main__":
-    input = parse_input()
-    for i in range(len(input)):
-        row = "".join([input[i][j] for j in range(494, 504)])
-        
-        # print(f"{i} {row}")
 
+def get_np_frame():
+    input = parse_input()
     frame = np.zeros((len(input), len(input[0])))
     sources = []
     for i in range(frame.shape[0]):
@@ -185,7 +184,13 @@ if __name__ == "__main__":
             elif input[i][j] == "+":
                 frame[i,j] = 0
                 sources.append((i, j))
+    
+    return frame, sources
 
+    
+def star1():
+    frame, sources = get_np_frame()
+    
     
     # print(frame[:, 494:])
     moving_sand = []
@@ -205,5 +210,55 @@ if __name__ == "__main__":
     sand_count -= 1
 
     # print(frame[:, 494:])
-    print_np_frame(frame[:, 494:])
+    # print_np_frame(frame[:, 494:])
     print(f"star 1: {sand_count}")  # 828
+    
+    print(frame.shape)
+
+def star2():
+    frame, sources = get_np_frame()
+
+    bottom = np.zeros((2, frame.shape[1]))
+    bottom[-1,:] = 1
+    frame = np.vstack([frame, bottom])
+    print(frame.shape)
+    # print_np_frame(frame[:, 494:])
+    
+    # make walls to reduce simulation time
+    # x_min = 473
+    # x_max = 530
+    # frame[:, 450] = 1
+    # frame[:, 550] = 1
+    
+    moving_sand = []
+    sand_count = 0
+    while True:
+        try:
+            moving_sand, new_sand = step(frame, moving_sand, sources[0])
+            if new_sand:
+                source = sources[0]
+                if frame[source[0]+1, source[1]] and frame[source[0]+1, source[1]+1] and frame[source[0]+1, source[1]-1]:
+                    break
+        except:
+            break
+        sand_count += new_sand
+        
+        if new_sand and (sand_count % 10 == 0):
+            print(sand_count)
+
+    # remove final sand that goes into the abyss
+    sand_count -= 1
+    
+    # print_np_frame(frame[:, 470:531])
+    
+    # add triangles outside walls
+    
+    
+    print(f"star 2: {np.sum(np.sum(frame == 3)) + 1}")
+    # 12061 too low
+    # 25171 too low
+
+
+if __name__ == "__main__":
+    # star1()
+    star2()

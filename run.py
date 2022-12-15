@@ -143,6 +143,86 @@ def get_col(x_lim, y_lim, sensors, beacons, y):
     return col
 
 
+def get_col_fast(x_lim, y_lim, sensors, beacons, y):
+    m = x_lim[1] - x_lim[0]
+    # n = y_lim[1] - y_lim[0]
+
+    col = np.zeros(m, dtype=int)
+    for sensor, beacon in zip(sensors, beacons):
+        # size of diamond at sensor position
+        # calculated using l1 distance (manhattan distance)
+        max_radius = abs(sensor.x - beacon.x) + abs(sensor.y - beacon.y)
+
+        # calculate width of "diamond" that overlaps with y=<wanted line>
+        distance_to_line = abs(sensor.y - y)
+        if distance_to_line > max_radius:
+            continue
+
+        radius = max_radius - distance_to_line
+        
+        # index shifted by x_min
+        i = sensor.x + abs(x_lim[0])
+        i0 = i - radius
+        i1 = i + radius
+        
+        col[i0:i1+1] = 1
+        
+        if beacon.y == y:
+            col[beacon.x + abs(x_lim[0])] = 2
+        if sensor.y == y:
+            col[sensor.x + abs(x_lim[0])] = 3
+
+    return col
+
+
+def check_col(sensors, beacons, y, x_max=4_000_000):
+    # the distress beacon must have x and y coordinates each no lower than 0 and no larger than 4000000.
+    min_coord = 0
+    max_coord = x_max
+
+    if y < min_coord or y > max_coord:
+        return False
+
+    col = np.zeros(max_coord+1, dtype=bool)
+    for sensor, beacon in zip(sensors, beacons):
+        # size of diamond at sensor position
+        # calculated using l1 distance (manhattan distance)
+        max_radius = abs(sensor.x - beacon.x) + abs(sensor.y - beacon.y)
+
+        # calculate width of "diamond" that overlaps with y=<wanted line>
+        distance_to_line = abs(sensor.y - y)
+        if distance_to_line > max_radius:
+            continue
+
+        radius = max_radius - distance_to_line
+        x0 = sensor.x - radius
+        x1 = sensor.x + radius
+
+        # if all relevant coords are covered by this (sensor, beacon)-combo
+        if x0 < min_coord and x1 > max_coord:
+            return False
+        
+        i0 = x0  # col starts at x = 0 now
+        i1 = x1
+        
+        # if all coords outside relevant range, skip this (sensor, beacon)-combo
+        if (i0 < min_coord and i1 < min_coord) or (i0 > max_coord and i1 > max_coord):
+            continue
+            
+        if i0 < min_coord:
+            i0 = min_coord
+        if i1 > max_coord:
+            i1 = max_coord
+        
+        col[i0:i1+1] = True
+
+    min_idx = np.argmin(col)
+    if col[min_idx] == 0:
+        return min_idx
+
+    return False
+
+
 def example():
     lines = []
     with open("example.txt") as file:
@@ -239,10 +319,13 @@ def star1():
     assert(sorted(beacons, key=lambda a: a.x)[0].x == -615866)
 
     col = get_col(x_lim, y_lim, sensors, beacons, y=2000000)
+    # col = get_col_fast(x_lim, y_lim, sensors, beacons, y=2000000)
 
     # print(np.sum(row==1))
     # print(np.sum(row==1)/float(row.shape[0]))
-    print(f"star 1: {np.sum(col==1)}")
+    result = np.sum(col==1)
+    assert(result == 4827924)
+    print(f"star 1: {result}")
 
     # 992979 is too low
     # 4879436 is too high
@@ -255,6 +338,90 @@ def star1():
     # 4827924 IS CORRECT
 
 
+def star2():
+    lines = []
+    with open("input.txt") as file:
+        for line in file:
+            lines.append(line.strip("\n"))
+
+
+    x_lim, y_lim = find_boundaries(lines)
+    x_lim = [x_lim[0], 5_870_939]
+
+    # Your handheld device indicates that the distress signal is coming from a 
+    # beacon nearby. The distress beacon is not detected by any sensor, but the 
+    # distress beacon must have x and y coordinates each no lower than 0 and no 
+    # larger than 4 000 000.
+
+    # To isolate the distress beacon's signal, you need to determine its tuning 
+    # frequency, which can be found by multiplying its x coordinate by 4000000 
+    # and then adding its y coordinate.
+
+    # In the example above, the search space is smaller: instead, the x and y 
+    # coordinates can each be at most 20. With this reduced search area, there 
+    # is only a single position that could have a beacon: x=14, y=11. The 
+    # tuning frequency for this distress beacon is 56000011.
+
+    # Find the only possible position for the distress beacon. What is its 
+    # tuning frequency?
+
+    sensors, beacons = get_sensors_and_beacons(lines)
+
+    for y in range(4_000_000):
+        # col = get_col_fast(x_lim, y_lim, sensors, beacons, y)
+        min_idx = check_col(sensors, beacons, y)
+        if y % 1000 == 0:
+            print(y)
+        if min_idx:
+            print(f"{min_idx = } {y = }")
+            print(f"star 2: {min_idx*4_000_000 + y}")
+            break
+
+    # perhaps
+    #     2973000
+    #     min_idx = 3244277 y = 2973564
+    #     star 2: 12977110973564
+
+
+def star2_example():
+    lines = []
+    with open("example.txt") as file:
+        for line in file:
+            lines.append(line.strip("\n"))
+
+    # Your handheld device indicates that the distress signal is coming from a 
+    # beacon nearby. The distress beacon is not detected by any sensor, but the 
+    # distress beacon must have x and y coordinates each no lower than 0 and no 
+    # larger than 4 000 000.
+
+    # To isolate the distress beacon's signal, you need to determine its tuning 
+    # frequency, which can be found by multiplying its x coordinate by 4000000 
+    # and then adding its y coordinate.
+
+    # In the example above, the search space is smaller: instead, the x and y 
+    # coordinates can each be at most 20. With this reduced search area, there 
+    # is only a single position that could have a beacon: x=14, y=11. The 
+    # tuning frequency for this distress beacon is 56000011.
+
+    # Find the only possible position for the distress beacon. What is its 
+    # tuning frequency?
+
+    sensors, beacons = get_sensors_and_beacons(lines)
+    max_coordinate = 20
+
+    for y in range(max_coordinate):
+        min_idx = check_col(sensors, beacons, y, x_max=max_coordinate)
+        if y % 1000 == 0:
+            print(y)
+        if min_idx:
+            print(f"{min_idx = } {y = }")
+            print(f"star 2: {min_idx*4_000_000 + y}")
+            break
+
+
+
 if __name__ == "__main__":
     # example()
-    star1()
+    # star1()
+    star2()
+    # star2_example()

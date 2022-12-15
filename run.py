@@ -163,25 +163,27 @@ def example():
 
     # print_map(sensors, beacons, x_lim, y_lim, y=10)
     
-    grid = np.zeros((m, n), dtype=int)
+    # sensors = [sensors[6]]
+    # beacons = [beacons[6]]
     
-    sensors = [sensors[6]]
-    beacons = [beacons[6]]
+    # sensors = [sensors[6]]
+    # beacons = [Beacon([20, 7])]
     
-    # print full thing with ascii
+    # check line by line
     for y in range(y_lim[0], y_lim[1]):
         col = get_col(x_lim, y_lim, sensors, beacons, y)
-        
-        j = y + abs(y_lim[0])
-        grid[:,j] = col
-        
-        # printing
+
         val2char = {0: ".", 1: "#", 2: "B", 3: "S"}
         line = f"{y:3d} "
         for val in col:
             line += val2char[val]
-            
-        # print(line)
+    
+    # use matrix
+    grid = np.zeros((m, n), dtype=int)
+    for y in range(y_lim[0], y_lim[1]):
+        col = get_col(x_lim, y_lim, sensors, beacons, y)
+        j = y + abs(y_lim[0])
+        grid[:,j] = col
     
     grid = np.transpose(grid)
     for i in range(grid.shape[0]):
@@ -192,15 +194,15 @@ def example():
         for j in range(grid.shape[1]):
             line += val2char[grid[i,j]]
         print(line)
-        
 
-    row = get_col(x_lim, y_lim, sensors, beacons, y=10)
+    col = get_col(x_lim, y_lim, sensors, beacons, y=10)
+    print(col)
     # print(row)
     # print(row[-4+abs(x_lim[0]):27+abs(x_lim[0])])
 
     # print(np.sum(row==1))
     # print(np.sum(row==1)/float(row.shape[0]))
-    print(f"star 1: {np.sum(row==1)}")
+    print(f"star 1: {np.sum(col==1)}")
 
 
 def star1():

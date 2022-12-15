@@ -120,17 +120,20 @@ def get_col(x_lim, y_lim, sensors, beacons, y):
         if radius == 0:
             # check if I'm stupid
             assert(distance_to_line == max_radius)
+            # assert(beacon.y == y or sensor.y == y)
         
         # index shifted by x_min
         i = sensor.x + abs(x_lim[0])
-        i0 = i - int(radius)
+        i0 = i - radius
         if i0 < 0:
+            raise RuntimeError(f"{i0 =}")
             i0 = 0
-        i1 = i + int(radius)
+        i1 = i + radius
         if i1 >= col.shape[0]:
+            raise RuntimeError(f"{i1 =}")
             i1 = col.shape[0] - 1
         
-        col[i0:i1+1] = 1
+        col[i0:i1+1][col[i0:i1+1] == 0] = 1
         
         if beacon.y == y:
             col[beacon.x + abs(x_lim[0])] = 2
@@ -163,8 +166,8 @@ def example():
 
     # print_map(sensors, beacons, x_lim, y_lim, y=10)
     
-    # sensors = [sensors[6]]
-    # beacons = [beacons[6]]
+    sensors = [sensors[6]]
+    beacons = [beacons[6]]
     
     # sensors = [sensors[6]]
     # beacons = [Beacon([20, 7])]
@@ -213,8 +216,9 @@ def star1():
 
 
     x_lim, y_lim = find_boundaries(lines)
-    # x_lim[0] -= 100
-    # x_lim[1] += 100
+    x_lim = [x_lim[0], 5870939]
+    # x_lim[0] -= 200
+    # x_lim[1] += 200
     # print(x_lim, y_lim)
 
     # m = x_lim[1] - x_lim[0]
@@ -234,12 +238,11 @@ def star1():
     # beacons.sort(key=lambda a: a.x)
     assert(sorted(beacons, key=lambda a: a.x)[0].x == -615866)
 
-    row = get_col(x_lim, y_lim, sensors, beacons, y=2000000)
-
+    col = get_col(x_lim, y_lim, sensors, beacons, y=2000000)
 
     # print(np.sum(row==1))
     # print(np.sum(row==1)/float(row.shape[0]))
-    print(f"star 1: {np.sum(row==1)}")
+    print(f"star 1: {np.sum(col==1)}")
 
     # 992979 is too low
     # 4879436 is too high
@@ -247,8 +250,11 @@ def star1():
     # 2540142 is wrong
     # 4721467 is not right
     # 4721467 ........
+    # 4721467
+    # 4721567
+    # 4827924 IS CORRECT
 
 
 if __name__ == "__main__":
-    example()
-    # star1()
+    # example()
+    star1()

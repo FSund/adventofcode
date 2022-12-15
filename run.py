@@ -100,6 +100,46 @@ def print_map(sensors, beacons, x_lim, y_lim, y=None):
             print(_get_map_line(sensors, beacons, x_lim, y))
 
 
+def get_col(x_lim, y_lim, sensors, beacons, y):
+    m = x_lim[1] - x_lim[0]
+    # n = y_lim[1] - y_lim[0]
+
+    col = np.zeros(m, dtype=int)
+    for sensor, beacon in zip(sensors, beacons):
+        # size of diamond at sensor position
+        # calculated using l1 distance (manhattan distance)
+        max_radius = abs(sensor.x - beacon.x) + abs(sensor.y - beacon.y)
+
+        # calculate width of "diamond" that overlaps with y=<wanted line>
+        distance_to_line = abs(sensor.y - y)
+        if distance_to_line > max_radius:
+            continue
+
+        radius = max_radius - distance_to_line
+        # print(radius)
+        if radius == 0:
+            # check if I'm stupid
+            assert(distance_to_line == max_radius)
+        
+        # index shifted by x_min
+        i = sensor.x + abs(x_lim[0])
+        i0 = i - int(radius)
+        if i0 < 0:
+            i0 = 0
+        i1 = i + int(radius)
+        if i1 >= col.shape[0]:
+            i1 = col.shape[0] - 1
+        
+        col[i0:i1+1] = 1
+        
+        if beacon.y == y:
+            col[beacon.x + abs(x_lim[0])] = 2
+        if sensor.y == y:
+            col[sensor.x + abs(x_lim[0])] = 3
+
+    return col
+
+
 def example():
     lines = []
     with open("example.txt") as file:
@@ -121,59 +161,42 @@ def example():
 
     sensors, beacons = get_sensors_and_beacons(lines)
 
-    print_map(sensors, beacons, x_lim, y_lim, y=10)
+    # print_map(sensors, beacons, x_lim, y_lim, y=10)
     
-    y = 10
-    row = np.zeros(m, dtype=int)
-    for sensor, beacon in zip(sensors, beacons):
-        # x = sensor.x
+    grid = np.zeros((m, n), dtype=int)
+    
+    sensors = [sensors[6]]
+    beacons = [beacons[6]]
+    
+    # print full thing with ascii
+    for y in range(y_lim[0], y_lim[1]):
+        col = get_col(x_lim, y_lim, sensors, beacons, y)
         
-        # if sensor.y <= y and beacon.y >= y:
-        #     # sensor below line and beacon above
-        #     pass
-        # elif sensor.y >= y and beacon.y <= y:
-        #     # sensor above line and beacon below
-        #     pass
+        j = y + abs(y_lim[0])
+        grid[:,j] = col
         
+        # printing
+        val2char = {0: ".", 1: "#", 2: "B", 3: "S"}
+        line = f"{y:3d} "
+        for val in col:
+            line += val2char[val]
+            
+        # print(line)
+    
+    grid = np.transpose(grid)
+    for i in range(grid.shape[0]):
+        val2char = {0: ".", 1: "#", 2: "B", 3: "S"}
         
-        # dy = abs(beacon.y - sensor.y) - abs(sensor.y - y)
-        # print(dy)
+        y = i - abs(y_lim[0])
+        line = f"{y:3d} "
+        for j in range(grid.shape[1]):
+            line += val2char[grid[i,j]]
+        print(line)
         
-        
-        
-        # size of diamond at sensor position
-        # calculated using l1 distance (manhattan distance)
-        # max_width = abs(beacon.x - sensor.x)
-        max_radius = abs(sensor.x - beacon.x) + abs(sensor.y - beacon.y)
-        # max_width = 2*max_distance
 
-        # calculate width of "diamond" that overlaps with y=<wanted line>
-        distance_to_line = abs(sensor.y - y)
-        if distance_to_line > max_radius:
-            continue
-
-        radius = max_radius - distance_to_line
-        if radius == 0:
-            # check if I'm stupid
-            assert(distance_to_line == max_radius)
-
-        print(f"{radius = }")
-        
-        # max_length = dx
-        # length = dx - 
-        
-        # index shifted by x_min
-        i = sensor.x + abs(x_lim[0])
-        i0 = i - int(radius)
-        i1 = i + int(radius)
-        row[i0:i1+1] = 1
-        
-        if beacon.y == y:
-            row[beacon.x + abs(x_lim[0])] = 2
-        if sensor.y == y:
-            row[sensor.x + abs(x_lim[0])] = 3
-
-    print(row[-4+abs(x_lim[0]):27+abs(x_lim[0])])
+    row = get_col(x_lim, y_lim, sensors, beacons, y=10)
+    # print(row)
+    # print(row[-4+abs(x_lim[0]):27+abs(x_lim[0])])
 
     # print(np.sum(row==1))
     # print(np.sum(row==1)/float(row.shape[0]))
@@ -192,8 +215,8 @@ def star1():
     # x_lim[1] += 100
     # print(x_lim, y_lim)
 
-    m = x_lim[1] - x_lim[0]
-    n = y_lim[1] - y_lim[0]
+    # m = x_lim[1] - x_lim[0]
+    # n = y_lim[1] - y_lim[0]
     # print(f"gbytes = {m*n/8/1024/1024/1024}")
 
     # Consult the report from the sensors you just deployed. 
@@ -209,47 +232,7 @@ def star1():
     # beacons.sort(key=lambda a: a.x)
     assert(sorted(beacons, key=lambda a: a.x)[0].x == -615866)
 
-
-    # y = 2000000
-    # sensor_idx = 0
-    # beacon_idx = 0
-    # for x in range(x_lim[0], x_lim[1]):
-    #     # find nearest sensor and beacon
-    #     for sensor, beacon in zip(sensors, beacons):
-    #         if sensor[0] == x:
-    #             print(sensor)
-    #         if beacon[0] == x:
-    #             print(beacon)
-
-    y = 2000000
-    row = np.zeros(m, dtype=int)
-    for sensor, beacon in zip(sensors, beacons):
-        # size of diamond at sensor position
-        # calculated using l1 distance (manhattan distance)
-        max_radius = abs(sensor.x - beacon.x) + abs(sensor.y - beacon.y)
-
-        # calculate width of "diamond" that overlaps with y=<wanted line>
-        distance_to_line = abs(sensor.y - y)
-        if distance_to_line > max_radius:
-            continue
-
-        radius = max_radius - distance_to_line
-        if radius == 0:
-            # check if I'm stupid
-            assert(distance_to_line == max_radius)
-
-        print(f"{radius = }")
-        
-        # index shifted by x_min
-        i = sensor.x + abs(x_lim[0])
-        i0 = i - int(radius)
-        i1 = i + int(radius)
-        row[i0:i1+1] = 1
-        
-        if beacon.y == y:
-            row[beacon.x + abs(x_lim[0])] = 2
-        # if sensor.y == y:
-        #     row[sensor.x + abs(x_lim[0])] = 3
+    row = get_col(x_lim, y_lim, sensors, beacons, y=2000000)
 
 
     # print(np.sum(row==1))
@@ -261,6 +244,7 @@ def star1():
     # 4879435 is too high
     # 2540142 is wrong
     # 4721467 is not right
+    # 4721467 ........
 
 
 if __name__ == "__main__":

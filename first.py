@@ -30,13 +30,14 @@ max_pressures = {}
 
 def go_deeper(valves, node_name, minutes_left, path):
     global max_pressures
-    # print(f"{node_name}, {minutes_left}")
 
-    # max pressure from children of this node
-    max_pressure = 0
-    
+    if max_pressures[node_name][minutes_left] != -1:
+        raise RuntimeError
+        # return max_pressures[node_name][minutes_left]
+
+    max_pressure = 0  # max pressure from children of this node
+    pressure_from_this_node = 0
     for open_valve in [False, True]:
-        pressure_from_this_node = 0
         if open_valve:
             minutes_left -= 1  # subtract time to open valve
             pressure_from_this_node = valves[node_name]["flow"] * minutes_left
@@ -50,25 +51,25 @@ def go_deeper(valves, node_name, minutes_left, path):
                 pressure_released = max_pressures[name][minutes_left - 1]
             else:
                 pressure_released, path = go_deeper(valves, name, minutes_left - 1, path)
-                # if pressure_released > max_pressures[name][minutes_left - 1]:
-                #     max_pressures[name][minutes_left - 1] = pressure_released
-                
-            if pressure_released > max_pressure:
+                # max_pressures[node_name][minutes_left - 1] = pressure_released
+
+            if max_pressure < pressure_released:
                 max_pressure = pressure_released
-        
-    if minutes_left == 18:
+
+    if minutes_left == 15:
         print(f"{node_name}, {minutes_left}, {max_pressure + pressure_from_this_node}")
-    
-    if max_pressure + pressure_from_this_node > 1651:
-        raise RuntimeError("Found too high pressure")
 
     # max pressure from this node and connections
     result = max_pressure + pressure_from_this_node
-    
+
+    if result > 1651:
+        raise RuntimeError(f"Found too high pressure ({node_name}, ")
+
     # update dict
-    # if max_pressures[name][minutes_left] != -1:
-    #     raise RuntimeError(f"{name} {minutes_left} -> {max_pressures[name][minutes_left]}")
-    max_pressures[node_name][minutes_left] = result
+    if max_pressures[node_name][minutes_left] != -1:
+        if result != max_pressures[node_name][minutes_left]:
+            raise RuntimeError(f"max_pressure[{node_name}][{minutes_left}] = {max_pressures[node_name][minutes_left]} != {result}")
+        max_pressures[node_name][minutes_left] = result
 
     return result, path
 
@@ -95,7 +96,7 @@ def star1_example():
     
     global max_pressures
     for name in valves.keys():
-        max_pressures[name] = np.empty(n, dtype=int)
+        max_pressures[name] = np.empty(n+1, dtype=int)
         max_pressures[name].fill(-1)
     
     print(valves)

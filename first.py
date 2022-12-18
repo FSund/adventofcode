@@ -73,6 +73,45 @@ def find_spawn_idx(frame, rock):
     return i - 3  - rock.shape[0]
 
 
+def frame_to_example_ascii(frame, irange=None):
+    lines = []
+    if irange is None:
+        irange = range(frame.shape[0])
+    for i in irange:
+        line = ""
+        for j in range(frame.shape[1]):
+            if frame[i,j] == 0:  # free
+                line += "."
+            elif frame[i,j] == 2:  # moving rock
+                line += "@"
+            elif frame[i,j] == 4:  # stopped rock
+                line += "#"
+            elif frame[i,j] == 1:  # boundaries
+                if i == frame.shape[0]-1:
+                    if j == 0 or j == frame.shape[1]-1:
+                        line += "+"
+                    else:
+                        line += "-"
+                else:
+                    line += "|"
+        lines.append(line)
+        
+    return lines
+
+
+def compare_frame_to_example_ascii(frame):
+    lines_ex = []
+    with open("example_ascii_final.txt") as f:
+        for line in f:
+            lines_ex.append(line.strip("\n"))
+    
+    lines = frame_to_example_ascii(frame, irange=range(frame.shape[0]-22, frame.shape[0]))
+    for l0, l1 in zip(lines_ex, lines):
+        assert(l0 == l1)
+        if l0 != l1:
+            raise RuntimeError("example not equal")
+
+
 def print_full_frame(frame, irange=None):
     if irange is None:
         irange = range(frame.shape[0])
@@ -248,8 +287,40 @@ def step(frame, rock, rocks_it, next_action, rock_position, moves_it, n_rocks):
 #     move = next(moves)
 #     print(move)
 
+def check_example():
+    frame = np.zeros((5000, 9), dtype=int)
+    
+    # chamber limits
+    frame[-1,:] = 1
+    frame[:,0] = 1
+    frame[:,-1] = 1
+    
+    # spawn first rock manually
+    rock_position = [frame.shape[0] - 4 - rocks[0].shape[0], 3]
+    add_rock(frame, rocks[0], rock_position)
+    
+    lines = get_input("example.txt")
+    
+    moves = []
+    for c in lines[0]:
+        moves.append(c)
 
-if __name__ == "__main__":
+    n_rocks = 1
+    next_action = 1  # 0: spawn, 1: push, 3: fall
+    moves_it = itertools.cycle(moves)
+    rocks_it = itertools.cycle(rocks)
+    rock = next(rocks_it)  # get first rock
+    n_rocks = 1
+    while n_rocks < 11:
+        rock_position, next_action, rock, n_rocks = step(frame, rock, rocks_it, next_action, rock_position, moves_it, n_rocks)
+
+    compare_frame_to_example_ascii(frame)
+    assert(np.all(frame <= 4))
+    
+    return True
+
+
+def star1():
     frame = np.zeros((5000, 9), dtype=int)
     
     # chamber limits
@@ -264,7 +335,7 @@ if __name__ == "__main__":
     add_rock(frame, rocks[0], rock_position)
     # print(frame)
     
-    print_part_frame_from_rock(frame, rock_position)
+    # print_part_frame_from_rock(frame, rock_position)
     
     lines = get_input("example.txt")
     
@@ -286,15 +357,22 @@ if __name__ == "__main__":
         # print(n_rocks)
         # print_frame(frame, rock_position)
     
-    # print_frame(frame, rock_position)
-
+    # print_part_frame_from_rock(frame, rock_position)
+    
     remove_rock(frame, rock, rock_position)
     idx = find_top_rock_idx(frame)
     # print(idx)
-    print(f"example: {idx-1}")
+    # print(f"example: {idx-1}")
+    print(f"star 1: {frame.shape[0] - idx - 1}")
     
     assert(np.all(frame <= 4))
     
-    
-    
-    print_full_frame(frame, range(idx-10, idx+10))
+    # print_full_frame(frame, range(idx-10, idx+10))
+
+
+if __name__ == "__main__":
+    if not check_example():
+        print("TESTS FAILED")
+        raise RuntimeError("TESTS FAILED")
+
+    star1()

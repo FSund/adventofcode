@@ -38,9 +38,9 @@ star[2,1] = 2
 corner = np.zeros((3, 3), dtype=int)
 corner[0,2] = 2
 corner[1,2] = 2
-corner[0,2] = 2
-corner[1,2] = 2
 corner[2,2] = 2
+corner[2,0] = 2
+corner[2,1] = 2
 vert = np.zeros((4, 1), dtype=int)
 vert.fill(2)
 square = np.zeros((2, 2), dtype=int)
@@ -51,29 +51,64 @@ rocks = [horiz, star, corner, vert, square]
 
 def find_top_rock_idx(frame):
     i = np.argmax(
-        np.sum(
-            frame > 1,  # look for everything except walls
-            axis=1) > 1)
+        np.sum(frame > 1, axis=1) > 0
+    )
     return i
 
 
 def find_spawn_idx(frame, rock):
     # rock "position" is top left pixel of rock
     i = find_top_rock_idx(frame)
+    
+    # print(f"top rock row idx: {i}")
+    # print(frame[i-10:])
+    # a = frame>1
+    # print(a[i-10:])
+    # b = np.sum(frame > 1, axis=1)
+    # print(b[i-10:])
+    # c = b > 0
+    # print(c[i-10:])
+    
+    
     return i - 3  - rock.shape[0]
 
 
-def print_frame(frame):
-    # print(np.sum(frame[0:-2, 1:-2], axis=1))
-    top_rock_idx = find_top_rock_idx(frame)
-    for i in range(top_rock_idx-2, frame.shape[0]):
-        line = ""
+def print_full_frame(frame, irange=None):
+    if irange is None:
+        irange = range(frame.shape[0])
+    for i in irange:
+        line = f"{i:3d} "
         for j in range(frame.shape[1]):
             if frame[i,j] == 0:  # free
                 line += "."
             elif frame[i,j] == 2:  # moving rock
                 line += "@"
-            elif frame[i,j] == 3:  # stopped rock
+            elif frame[i,j] == 4:  # stopped rock
+                line += "#"
+            elif frame[i,j] == 1:  # boundaries
+                if i == frame.shape[0]-1:
+                    if j == 0 or j == frame.shape[1]-1:
+                        line += "+"
+                    else:
+                        line += "—"
+                else:
+                    line += "|"
+        print(line)
+
+
+def print_part_frame_from_rock(frame, rock_pos):
+    # print(np.sum(frame[0:-2, 1:-2], axis=1))
+    # top_rock_idx = find_top_rock_idx(frame)
+    # print(frame[41])
+    # print(top_rock_idx-2)
+    for i in range(rock_pos[0]-1, frame.shape[0]):
+        line = f"{i:3d} "
+        for j in range(frame.shape[1]):
+            if frame[i,j] == 0:  # free
+                line += "."
+            elif frame[i,j] == 2:  # moving rock
+                line += "@"
+            elif frame[i,j] == 4:  # stopped rock
                 line += "#"
             elif frame[i,j] == 1:  # boundaries
                 if i == frame.shape[0]-1:
@@ -100,7 +135,18 @@ def add_rock(frame, rock, position):
     i1 = i0 + rock.shape[0]
     j0 = position[1]
     j1 = j0 + rock.shape[1]
+
     frame[i0:i1, j0:j1] += rock
+
+
+def remove_rock(frame, rock, position):
+    # "position" is top left corner of rock
+    i0 = position[0]
+    i1 = i0 + rock.shape[0]
+    j0 = position[1]
+    j1 = j0 + rock.shape[1]
+
+    frame[i0:i1, j0:j1] -= rock
 
 
 def spawn_rock(frame, rock):
@@ -162,7 +208,7 @@ def fall(frame, rock, pos, dx=1):
     if np.any(np.logical_and(frame[i0:i1, j0:j1], rock)):
         success = False
         # add fixed rock
-        frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] += rock + 1
+        frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] += 2*rock
     else:
         success = True
         frame[i0:i1, j0:j1] += rock
@@ -170,23 +216,24 @@ def fall(frame, rock, pos, dx=1):
     
     return pos, success
 
-def step(frame, rock, rocks_it, next_action, rock_position, moves_it):
+def step(frame, rock, rocks_it, next_action, rock_position, moves_it, n_rocks):
     if next_action == 0:
         # spawn
         rock = next(rocks_it)
         position = spawn_rock(frame, rock)
         next_action = 1
-        print(f"spawn at {position}")
+        # print(f"spawn at {position}")
+        n_rocks += 1
     elif next_action == 1:  # PUSH
         # push if possible
         move = next(moves_it)
         position, success = push(frame, rock, rock_position, move)
-        print(f"push {success}")
+        # print(f"push {success}")
         next_action = 2
     elif next_action == 2:  # FALL
         # fall, if possible
         position, success = fall(frame, rock, rock_position)
-        print(f"fall {success}")
+        # print(f"fall {success}")
         if success:
             # push
             next_action = 1
@@ -194,7 +241,7 @@ def step(frame, rock, rocks_it, next_action, rock_position, moves_it):
             # spawn new
             next_action = 0
     
-    return position, next_action, rock
+    return position, next_action, rock, n_rocks
 
 
 # def test_moves(moves):
@@ -203,7 +250,7 @@ def step(frame, rock, rocks_it, next_action, rock_position, moves_it):
 
 
 if __name__ == "__main__":
-    frame = np.zeros((20, 9), dtype=int)
+    frame = np.zeros((5000, 9), dtype=int)
     
     # chamber limits
     frame[-1,:] = 1
@@ -217,7 +264,7 @@ if __name__ == "__main__":
     add_rock(frame, rocks[0], rock_position)
     # print(frame)
     
-    print_frame(frame)
+    print_part_frame_from_rock(frame, rock_position)
     
     lines = get_input("example.txt")
     
@@ -232,7 +279,22 @@ if __name__ == "__main__":
     moves_it = itertools.cycle(moves)
     rocks_it = itertools.cycle(rocks)
     rock = next(rocks_it)  # get first rock
-    for i in range(10):
-        rock_position, next_action, rock = step(frame, rock, rocks_it, next_action, rock_position, moves_it)
-        print(rock_position)
-        print_frame(frame)
+    n_rocks = 1
+    while n_rocks < 2023:
+        rock_position, next_action, rock, n_rocks = step(frame, rock, rocks_it, next_action, rock_position, moves_it, n_rocks)
+        # print(rock_position)
+        # print(n_rocks)
+        # print_frame(frame, rock_position)
+    
+    # print_frame(frame, rock_position)
+
+    remove_rock(frame, rock, rock_position)
+    idx = find_top_rock_idx(frame)
+    # print(idx)
+    print(f"example: {idx-1}")
+    
+    assert(np.all(frame <= 4))
+    
+    
+    
+    print_full_frame(frame, range(idx-10, idx+10))

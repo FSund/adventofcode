@@ -325,8 +325,8 @@ def get_height(frame):
     return frame.shape[0] - idx - 1
 
 
-def star2_example(filename="example.txt"):
-    n = 200
+def star2_example(filename="example.txt", block_size=200):
+    n = block_size
     frame = np.zeros((n, 9), dtype=np.byte)
     
     # chamber limits
@@ -383,10 +383,10 @@ def star2_example(filename="example.txt"):
             
             # print_full_frame(frame[rock_position[0]-2:rock_position[0]+20,:])
             
-            print("SHIFT")
+            # print("SHIFT")
             
-        if iterations % 10000 == 0:
-            print(f"{n_rocks = }")
+        # if iterations % 10000 == 0:
+        #     print(f"{n_rocks = }")
         # print(rock_position)
         # print(n_rocks)
         # print_frame(frame, rock_position)
@@ -398,8 +398,8 @@ def star2_example(filename="example.txt"):
     height = get_height(frame) + total_shifted
     
     # print(f"star 1: {get_height(frame)}")
-    print(f"{total_shifted = }")
-    print(f"star 2: {height}")
+    # print(f"{total_shifted = }")
+    # print(f"star 2: {height}")
     
     assert(np.all(frame <= 4))
     
@@ -409,8 +409,8 @@ def star2_example(filename="example.txt"):
 
 
 
-def star2(filename="example.txt"):
-    n = 4000
+def star2(filename="example.txt", max_n_rocks=1_000_000_000_000, block_size=4000):
+    n = block_size
     frame = np.zeros((n, 9), dtype=np.byte)
     
     # chamber limits
@@ -443,7 +443,7 @@ def star2(filename="example.txt"):
     first_cycle = False
     iterations = 0
     total_shifted = 0
-    while n_rocks < 2023:
+    while n_rocks < max_n_rocks:
         rock_position, next_action, rock, n_rocks = step(frame, rock, rocks_it, next_action, rock_position, moves_it, n_rocks)
         if rock_position[0] < n/8:
             # print_full_frame(frame[rock_position[0]-2:rock_position[0]+20,:])
@@ -467,7 +467,7 @@ def star2(filename="example.txt"):
             
             # print_full_frame(frame[rock_position[0]-2:rock_position[0]+20,:])
             
-            print("SHIFT")
+            # print("SHIFT")
             
         if iterations % 10000 == 0:
             print(f"{n_rocks = }")
@@ -497,5 +497,6 @@ if __name__ == "__main__":
         print("TESTS FAILED")
         raise RuntimeError("TESTS FAILED")
 
-    assert(star2_example("example.txt") == 3068)
+    assert(star2_example("example.txt", block_size=200) == 3068)
     # star2("input.txt")
+    star2("input.txt", 100_000, 200)

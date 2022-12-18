@@ -320,7 +320,7 @@ def check_example():
     return True
 
 
-def star1():
+def star1(filename="example.txt"):
     frame = np.zeros((5000, 9), dtype=int)
     
     # chamber limits
@@ -337,7 +337,7 @@ def star1():
     
     # print_part_frame_from_rock(frame, rock_position)
     
-    lines = get_input("example.txt")
+    lines = get_input(filename)
     
     moves = []
     for c in lines[0]:
@@ -375,4 +375,5 @@ if __name__ == "__main__":
         print("TESTS FAILED")
         raise RuntimeError("TESTS FAILED")
 
-    star1()
+    star1("example.txt")
+    star1("input.txt")

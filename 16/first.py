@@ -16,6 +16,7 @@ def get_valves(lines):
         valves[name] = {}
         valves[name]["flow"] = flow
         valves[name]["connections"] = connections
+        valves[name]["open"] = False
         
         for c in connections:
             if len(c) > 2:
@@ -35,11 +36,12 @@ def get_max_pressure(valves, node_name, minutes_left, path):
     #     raise RuntimeError
 
     max_pressure = 0  # max pressure from children of this node
+    # best_path = path
     pressure_from_this_node = 0
     shortcut = False
     for open_valve in [False, True]:
-        # TODO: Handle already opened valve!!!
-        if open_valve:
+        if open_valve and valves[node_name]["open"] == False:
+            valves[node_name]["open"] = True
             minutes_left -= 1  # subtract time to open valve
             pressure_from_this_node = valves[node_name]["flow"] * minutes_left
             
@@ -62,6 +64,7 @@ def get_max_pressure(valves, node_name, minutes_left, path):
 
             if max_pressure < pressure_released:
                 max_pressure = pressure_released
+                # best_path.append("name")
 
     # max pressure from this node and connections
     result = max_pressure + pressure_from_this_node
@@ -92,6 +95,7 @@ def brute_force(valves, start, minutes):
     #     name = queue.pop()
     #     for name in valves[name]["connections"]:
     #         queue.append(name)
+
     return get_max_pressure(valves, start, minutes, path=[start])
 
 
@@ -110,7 +114,7 @@ def star1_example():
         max_pressures[name].fill(-1)
     
     print(valves)
-    start = "AA"
+    start = "DD"
     max_pressure, path = brute_force(valves, start, minutes=n)
     print(f"{max_pressure = }")
     print(f"{path = }")

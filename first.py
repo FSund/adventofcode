@@ -113,31 +113,59 @@ def spawn_rock(frame, rock):
     return position
 
 
-def push(frame, rock, rock_position, move):
-    if move == "<":
-        pass
-    elif move == ">":
-        pass
+def _push(frame, rock, pos, dy):
+    # remove current rock
+    frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] -= rock
     
-    return rock_position, True
-
-
-def fall(frame, rock, pos):
+    # new rock position
+    i0 = pos[0]
+    i1 = pos[0] + rock.shape[0]
+    j0 = pos[1] + dy
+    j1 = pos[1] + dy + rock.shape[1]
+    
     # check if new position is free
-    i0 = pos[0] + 1
-    i1 = pos[0] + 1 + rock.shape[0]
-    j0 = pos[1]
-    j1 = pos[1] + rock.shape[1]
-    
     if np.any(np.logical_and(frame[i0:i1, j0:j1], rock)):
         success = False
-        # fix rock
+        # add back rock
         frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] += rock
     else:
         success = True
-        frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] -= rock
         frame[i0:i1, j0:j1] += rock
-        pos[0] += 1
+        pos[1] += dy
+    
+    return pos, success
+
+
+def push(frame, rock, pos, move):
+    # "<" means a push to the left, 
+    # while ">" means a push to the right
+    if move == "<":
+        dy = -1
+    elif move == ">":
+        dy = +1
+    
+    return _push(frame, rock, pos, dy)
+
+
+def fall(frame, rock, pos, dx=1):
+    # remove existing rock
+    frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] -= rock
+
+    # new rock position
+    i0 = pos[0] + dx
+    i1 = pos[0] + dx + rock.shape[0]
+    j0 = pos[1]
+    j1 = pos[1] + rock.shape[1]
+
+    # check if new position is free    
+    if np.any(np.logical_and(frame[i0:i1, j0:j1], rock)):
+        success = False
+        # add fixed rock
+        frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] += 2*rock
+    else:
+        success = True
+        frame[i0:i1, j0:j1] += rock
+        pos[0] += dx
     
     return pos, success
 
@@ -147,14 +175,17 @@ def step(frame, rock, rocks_it, next_action, rock_position, moves_it):
         rock = next(rocks_it)
         position = spawn_rock(frame, rock)
         next_action = 1
-    elif next_action == 1:
+        print(f"spawn at {position}")
+    elif next_action == 1:  # PUSH
         # push if possible
         move = next(moves_it)
         position, success = push(frame, rock, rock_position, move)
+        print(f"push {success}")
         next_action = 2
-    elif next_action == 2:
+    elif next_action == 2:  # FALL
         # fall, if possible
         position, success = fall(frame, rock, rock_position)
+        print(f"fall {success}")
         if success:
             # push
             next_action = 1
@@ -197,11 +228,10 @@ if __name__ == "__main__":
     # rock_idx = 1
     n_rocks = 1
     next_action = 1  # 0: spawn, 1: push, 3: fall
-    next_action = 2  # TESTING
     moves_it = itertools.cycle(moves)
     rocks_it = itertools.cycle(rocks)
-    rock = rocks[0]
-    for i in range(4):
+    rock = next(rocks_it)  # get first rock
+    for i in range(10):
         position, next_action, rock = step(frame, rock, rocks_it, next_action, rock_position, moves_it)
+        print(position)
         print_frame(frame)
-        

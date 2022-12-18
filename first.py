@@ -28,23 +28,23 @@ def get_input(filename="example.txt"):
 
 # make rock types
 horiz = np.zeros((1, 4), dtype=int)
-horiz.fill(1)
+horiz.fill(2)
 star = np.zeros((3, 3), dtype=int)
-star[0,1] = 1
-star[1,0] = 1
-star[1,1] = 1
-star[1,2] = 1
-star[2,1] = 1
+star[0,1] = 2
+star[1,0] = 2
+star[1,1] = 2
+star[1,2] = 2
+star[2,1] = 2
 corner = np.zeros((3, 3), dtype=int)
-corner[0,2] = 1
-corner[1,2] = 1
-corner[0,2] = 1
-corner[1,2] = 1
-corner[2,2] = 1
+corner[0,2] = 2
+corner[1,2] = 2
+corner[0,2] = 2
+corner[1,2] = 2
+corner[2,2] = 2
 vert = np.zeros((4, 1), dtype=int)
-vert.fill(1)
+vert.fill(2)
 square = np.zeros((2, 2), dtype=int)
-square.fill(1)
+square.fill(2)
 
 rocks = [horiz, star, corner, vert, square]
 
@@ -52,12 +52,13 @@ rocks = [horiz, star, corner, vert, square]
 def find_top_rock_idx(frame):
     i = np.argmax(
         np.sum(
-            frame[0:-2, 1:-2],  # skip walls
+            frame > 1,  # look for everything except walls
             axis=1) > 1)
     return i
 
 
 def find_spawn_idx(frame, rock):
+    # rock "position" is top left pixel of rock
     i = find_top_rock_idx(frame)
     return i - 3  - rock.shape[0]
 
@@ -68,13 +69,13 @@ def print_frame(frame):
     for i in range(top_rock_idx-2, frame.shape[0]):
         line = ""
         for j in range(frame.shape[1]):
-            if frame[i,j] == 0:
+            if frame[i,j] == 0:  # free
                 line += "."
-            elif frame[i,j] == 1:  # moving rock
+            elif frame[i,j] == 2:  # moving rock
                 line += "@"
-            elif frame[i,j] == 2:  # stopped rock
+            elif frame[i,j] == 3:  # stopped rock
                 line += "#"
-            elif frame[i,j] == 10:  # boundaries
+            elif frame[i,j] == 1:  # boundaries
                 if i == frame.shape[0]-1:
                     if j == 0 or j == frame.shape[1]-1:
                         line += "+"
@@ -161,7 +162,7 @@ def fall(frame, rock, pos, dx=1):
     if np.any(np.logical_and(frame[i0:i1, j0:j1], rock)):
         success = False
         # add fixed rock
-        frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] += 2*rock
+        frame[pos[0]:pos[0] + rock.shape[0], pos[1]:pos[1] + rock.shape[1]] += rock + 1
     else:
         success = True
         frame[i0:i1, j0:j1] += rock
@@ -205,9 +206,9 @@ if __name__ == "__main__":
     frame = np.zeros((20, 9), dtype=int)
     
     # chamber limits
-    frame[-1,:] = 10
-    frame[:,0] = 10
-    frame[:,-1] = 10
+    frame[-1,:] = 1
+    frame[:,0] = 1
+    frame[:,-1] = 1
     
     # print(rocks)
     
@@ -232,6 +233,6 @@ if __name__ == "__main__":
     rocks_it = itertools.cycle(rocks)
     rock = next(rocks_it)  # get first rock
     for i in range(10):
-        position, next_action, rock = step(frame, rock, rocks_it, next_action, rock_position, moves_it)
-        print(position)
+        rock_position, next_action, rock = step(frame, rock, rocks_it, next_action, rock_position, moves_it)
+        print(rock_position)
         print_frame(frame)

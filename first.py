@@ -149,4 +149,4 @@ def star1(filename):
 if __name__ == "__main__":
     assert(star1("example.txt") == 64)
     
-    
+    print(f'star 1: {star1("input.txt")}')

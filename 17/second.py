@@ -499,4 +499,4 @@ if __name__ == "__main__":
 
     assert(star2_example("example.txt", block_size=200) == 3068)
     # star2("input.txt")
-    star2("input.txt", 100_000, 200)
+    star2("input.txt", 20_000, 200)

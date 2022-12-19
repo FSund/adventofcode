@@ -110,15 +110,14 @@ def plot_3d(labels):
     ax.voxels(labels, facecolors=colors)
 
 
-if __name__ == "__main__":
-    lines = get_input("example.txt")
-    # lines = get_input("input.txt")
+def star1(filename):
+    lines = get_input(filename)
     max_xyz = get_max_index(lines)
     scan = get_scan(lines, max_xyz+2)
     
     labels, N = cc3d.connected_components(scan, connectivity=6,return_N=True)
-    print(f"{N = }")
-    print(np.max(labels))
+    # print(f"{N = }")
+    # print(np.max(labels))
     
     stats = cc3d.statistics(labels)
     
@@ -127,9 +126,9 @@ if __name__ == "__main__":
     
     # max_label = max(stats["voxel_counts"][1:])
     voxel_counts = stats["voxel_counts"][1:]
-    print(f"{voxel_counts = }")
+    # print(f"{voxel_counts = }")
     max_label = 1 + max(range(len(voxel_counts)), key=voxel_counts.__getitem__)
-    print(f"{max_label = }")
+    # print(f"{max_label = }")
 
     total_area = 0
     for label in range(1, N+1):
@@ -137,10 +136,17 @@ if __name__ == "__main__":
         start = np.argmax([labels==label])
         start = np.unravel_index(start, labels.shape)
         # print(labels[start])
-        print(f"{start = }")
+        # print(f"{start = }")
         
         _, area = find_area_bfs(labels, start)
         total_area += area
     
-    print(f"{total_area = }")
+    # print(f"{total_area = }")
+    
+    return total_area
+    
+
+if __name__ == "__main__":
+    assert(star1("example.txt") == 64)
+    
     

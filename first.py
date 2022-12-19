@@ -30,15 +30,19 @@ def get_scan(lines, n):
     return scan
 
 
-def find_area_bfs(voxels, start):
+def find_area_bfs(labels, start):
     visited = set() # to keep track of already visited nodes
     bfs_traversal = list()  # the BFS traversal result
     queue = list()  # queue
     parent = {}  # dict
     
+    total_area = 0
+    
     # push the root node to the queue and mark it as visited
     queue.append(start)
     visited.add(start)
+    
+    label = labels[start[0], start[1], start[2]]
     
     adjacent = (
         (0, 0, -1), (0, 0, +1), 
@@ -52,16 +56,30 @@ def find_area_bfs(voxels, start):
         current_pos = queue.pop(0)
         bfs_traversal.append(current_pos)
         
+        # start at max, subtract 1 for each neighbor with matching label
+        current_area = 6
+        
         # check all the neighbour nodes of the current node
         for translation in adjacent:
-            pos = (current_pos[0] + translation[0], current_pos[1] + translation[1])
+            pos = (
+                current_pos[0] + translation[0],
+                current_pos[1] + translation[1],
+                current_pos[2] + translation[2],
+            )
             
             # Make sure within range
-            if (pos[0] > (voxels.shape[0] - 1) or pos[0] < 0 
-                or pos[1] > (voxels.shape[1] - 1) or pos[1] < 0
-                or pos[2] > (voxels.shape[2] - 1) or pos[2] < 0 
+            if (pos[0] > (labels.shape[0] - 1) or pos[0] < 0 
+                or pos[1] > (labels.shape[1] - 1) or pos[1] < 0
+                or pos[2] > (labels.shape[2] - 1) or pos[2] < 0 
             ):
                 continue
+        
+            # only check matching labels
+            if labels[pos[0],pos[1],pos[2]] != label:
+                continue
+
+            # update area
+            current_area -= 1
 
             # if the neighbour nodes are not already visited, 
             # push them to the queue and mark them as visited
@@ -70,7 +88,11 @@ def find_area_bfs(voxels, start):
                 queue.append(pos)
                 parent[pos] = current_pos
 
-    return bfs_traversal
+        total_area += current_area
+
+    # print(f"{total_area = }")
+
+    return bfs_traversal, total_area
 
 
 def plot_3d(labels):
@@ -89,9 +111,10 @@ def plot_3d(labels):
 
 
 if __name__ == "__main__":
-    lines = get_input()
+    lines = get_input("example.txt")
+    # lines = get_input("input.txt")
     max_xyz = get_max_index(lines)
-    scan = get_scan(lines, max_xyz+1)
+    scan = get_scan(lines, max_xyz+2)
     
     labels, N = cc3d.connected_components(scan, connectivity=6,return_N=True)
     print(f"{N = }")
@@ -99,4 +122,25 @@ if __name__ == "__main__":
     
     stats = cc3d.statistics(labels)
     
-    plot_3d(labels)
+    if False:
+        plot_3d(labels)
+    
+    # max_label = max(stats["voxel_counts"][1:])
+    voxel_counts = stats["voxel_counts"][1:]
+    print(f"{voxel_counts = }")
+    max_label = 1 + max(range(len(voxel_counts)), key=voxel_counts.__getitem__)
+    print(f"{max_label = }")
+
+    total_area = 0
+    for label in range(1, N+1):
+        # find starting point
+        start = np.argmax([labels==label])
+        start = np.unravel_index(start, labels.shape)
+        # print(labels[start])
+        print(f"{start = }")
+        
+        _, area = find_area_bfs(labels, start)
+        total_area += area
+    
+    print(f"{total_area = }")
+    

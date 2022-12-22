@@ -16,6 +16,10 @@ class NodeType(Enum):
     FREE = 0
     WALL = 1
 
+class BorderType(Enum):
+    NONE = 0
+    LEFT = 1
+    RIGHT = 2
 
 class MapNode:
     def __init__(self, pos, type=NodeType.NONE):
@@ -27,6 +31,10 @@ class MapNode:
         self.left = None
         self.up = None
         self.down = None
+        self.right_border = BorderType.NONE
+        self.left_border = BorderType.NONE
+        self.up_border = BorderType.NONE
+        self.down_border = BorderType.NONE
     
     def __repr__(self):
         rmap = {
@@ -83,28 +91,36 @@ class Pos:
 
         self.rot = self.rot % 4
 
+    def rotate_border(self, border_type):
+        if border_type == BorderType.NONE:
+            pass
+        elif border_type == BorderType.LEFT:
+            self.rotate("L")
+        elif border_type == BorderType.RIGHT:
+            self.rotate("R")
+
     def _move_left(self, distance):
         for i in range(distance):
             if self.node.left.type == NodeType.FREE:
-                # print("left")
+                self.rotate_border(self.node.left_border)
                 self.node = self.node.left
         
     def _move_right(self, distance):
         for i in range(distance):
             if self.node.right.type == NodeType.FREE:
-                # print("right")
+                self.rotate_border(self.node.right_border)
                 self.node = self.node.right
     
     def _move_up(self, distance):
         for i in range(distance):
             if self.node.up.type == NodeType.FREE:
-                # print("up")
+                self.rotate_border(self.node.up_border)
                 self.node = self.node.up
     
     def _move_down(self, distance):
         for i in range(distance):
             if self.node.down.type == NodeType.FREE:
-                # print("down")
+                self.rotate_border(self.node.down_border)
                 self.node = self.node.down
     
     def move(self, d):
@@ -145,19 +161,18 @@ def make_map_nodes(lines):
     for i in range(height):
         line = lines[i]
         map.append([])
-        for j in range(len(line)):
-            p = line[j]
+        for j in range(width):
+            if j >= len(line):
+                p = " "
+            else:
+                p = line[j]
             map[i].append(
                 MapNode(
                     pos=(i, j),
                     type=cmap[p]
                 )
             )
-    
-    
-    # if i > 0 and i < (height-1) and j > 0 and j < (width - 1):
-    #     map[i][j].left = map[i-1]
-        
+            
     m = len(map)
     n = len(map[0])
     
@@ -195,9 +210,18 @@ def make_map_nodes(lines):
     return map
 
 
-def star1_v2(filename):
+def set_border_types(map):
+    m = len(map)
+    n = len(map[0])
+    
+
+
+def solve(filename, star2=False):
     lines = get_input(filename)
     map = make_map_nodes(lines)
+    
+    if star2:
+        map = set_border_types(map)
     
     # find start
     current = None
@@ -225,7 +249,10 @@ def star1_v2(filename):
 
 
 if __name__ == "__main__":
-    assert(star1_v2("22/example.txt") == 6032)
+    assert(solve("22/example.txt") == 6032)
+    assert(solve("22/input.txt") == 1428)
+    
+    print(solve("22/input.txt"))
     # assert(star1("22/input.txt") == 169525884255464)
     # print(f'star 1: {star1("22/input.txt")}')
 

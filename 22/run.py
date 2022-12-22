@@ -20,6 +20,12 @@ class BorderType(Enum):
     NONE = 0
     LEFT = 1
     RIGHT = 2
+    FLIP = 3  # rotate 180 degrees
+
+RIGHT = 0
+DOWN = 1
+LEFT = 2
+UP = 3
 
 class MapNode:
     def __init__(self, pos, type=NodeType.NONE):
@@ -31,18 +37,14 @@ class MapNode:
         self.left = None
         self.up = None
         self.down = None
+        
+        # border rotations
         self.right_border = BorderType.NONE
         self.left_border = BorderType.NONE
         self.up_border = BorderType.NONE
         self.down_border = BorderType.NONE
     
     def __repr__(self):
-        rmap = {
-            "0": ">",
-            "1": "v",
-            "2": "<",
-            "3": "^",
-        }
         return f"{self.type} [{self.pos[0]}, {self.pos[1]}]"
         
     def remove_none_connections(self, map):
@@ -66,12 +68,6 @@ class Pos:
         self.rot = rot
     
     def __repr__(self):
-        rmap = {
-            "0": ">",
-            "1": "v",
-            "2": "<",
-            "3": "^",
-        }
         return f"[{self.node.pos[0]}, {self.node.pos[1]}] {self.rot}"
     
     def get_password(self):
@@ -97,6 +93,10 @@ class Pos:
         elif border_type == BorderType.LEFT:
             self.rotate("L")
         elif border_type == BorderType.RIGHT:
+            self.rotate("R")
+        elif border_type == BorderType.FLIP:
+            # yes
+            self.rotate("R")
             self.rotate("R")
 
     def _move_left(self, distance):
@@ -210,10 +210,154 @@ def make_map_nodes(lines):
     return map
 
 
-def set_border_types(map):
+def _get_face_number_example(i, j):
+    cube_row = i//4
+    cube_col = j//4
+    
+    if cube_row == 0:
+        if cube_col == 2:
+            return 1
+    elif cube_row == 1:
+        if cube_col == 0:
+            return 2
+        elif cube_col == 1:
+            return 3
+        elif cube_col == 2:
+            return 4
+    elif cube_row == 2:
+        if cube_col == 2:
+            return 5
+        elif cube_col == 3:
+            return 6
+
+    raise RuntimeError
+
+
+def _get_face_number(i, j):
+    cube_row = i//50
+    cube_col = j//50
+    
+    if cube_row == 0:
+        if cube_col == 1:
+            return 1
+        elif cube_col == 2:
+            return 2
+    elif cube_row == 1:
+        if cube_col == 1:
+            return 3
+    elif cube_row == 2:
+        if cube_col == 0:
+            return 4
+        elif cube_col == 1:
+            return 5
+    elif cube_row == 3:
+        if cube_col == 0:
+            return 6
+
+    raise RuntimeError
+
+
+def get_face_number(i, j, example=False):
+    if example:
+        return _get_face_number_example(i, j)
+    else:
+        return _get_face_number(i, j)
+
+
+def get_border_rotation(from_face, to_face, example=False):
+    border_map_example = [
+        # from_face == row
+        # to_face == col
+        # 1    2    3    4    5    6 
+        ["N", "F", "L", "N", "x", "F",],  # from face 1
+        ["F", "N", "N", "x", "F", "R",],  # from face 2
+        ["R", "N", "N", "N", "L", "x",],  # from face 3
+        ["N", "x", "N", "N", "N", "R",],  # from face 4
+        ["x", "F", "R", "N", "N", "N",],  # from face 5
+        ["F", "L", "x", "L", "N", "N",],  # from face 6
+    ]
+    
+    border_map_real = [
+        # from_face == row
+        # to_face == col
+        # 1    2    3    4    5    6 
+        ["N", "N", "N", "F", "x", "R",],  # from face 1
+        ["N", "N", "R", "x", "F", "N",],  # from face 2
+        ["N", "L", "N", "L", "N", "x",],  # from face 3
+        ["F", "x", "R", "N", "N", "N",],  # from face 4
+        ["x", "F", "N", "N", "N", "R",],  # from face 5
+        ["L", "N", "x", "N", "L", "N",],  # from face 6
+    ]
+    
+    if example:
+        border_map = border_map_example
+    else:
+        border_map = border_map_real
+    
+    rot = border_map[from_face-1][to_face-1]
+    if rot == "x": # 0 is not possible
+        return BorderType.NONE
+    elif rot == "N":  # no rotation
+        return BorderType.NONE
+    elif rot == "L":
+        return BorderType.LEFT
+    elif rot == "R":
+        return BorderType.RIGHT
+    elif rot == "F":
+        return BorderType.FLIP
+
+
+def set_border_rotations(map, example=False):
+    #         1111
+    #         1111
+    #         1111
+    #         1111
+    # 222233334444
+    # 222233334444
+    # 222233334444
+    # 222233334444
+    #         55556666
+    #         55556666
+    #         55556666
+    #         55556666
     m = len(map)
     n = len(map[0])
     
+    for i in range(m):
+        for j in range(n):
+            node = map[i][j]
+            # skip unreachable nodes
+            if node.type != NodeType.NONE:
+                from_face = get_face_number(i, j, example=example)
+                
+                # right
+                other = node.right
+                to_face = get_face_number(other.pos[0], other.pos[1], example=example)
+                node.right_border = get_border_rotation(from_face, to_face, example)
+                
+                # down
+                other = node.down
+                to_face = get_face_number(other.pos[0], other.pos[1], example=example)
+                node.down_border = get_border_rotation(from_face, to_face, example)
+                
+                # left
+                other = node.left
+                to_face = get_face_number(other.pos[0], other.pos[1], example=example)
+                node.left_border = get_border_rotation(from_face, to_face, example)
+                
+                # up
+                other = node.up
+                to_face = get_face_number(other.pos[0], other.pos[1], example=example)
+                node.up_border = get_border_rotation(from_face, to_face, example)
+
+    return map
+
+
+def fix_star2_connections(map):
+    m = len(map)
+    n = len(map[0])
+    # TODO
+    pass
 
 
 def solve(filename, star2=False):
@@ -221,8 +365,8 @@ def solve(filename, star2=False):
     map = make_map_nodes(lines)
     
     if star2:
-        map = set_border_types(map)
-    
+        map = set_border_rotations(map, True if "example" in filename else False)
+
     # find start
     current = None
     for j in range(len(map[0])):
@@ -236,26 +380,61 @@ def solve(filename, star2=False):
     operations = re.split('([R,L])', lines[-1])
     for op in operations:
         pos.do_operation(op)
-        # print(pos)
+        print(pos)
         
-    # print(pos)
-    # print(f"node: {pos.node}")
+    print(pos)
+    print(f"node: {pos.node}")
     
-    # print(pos.get_password())
-    # print(f"row: {pos.node.pos[0]}")
-    # print(f"col: {pos.node.pos[1]}")
+    print(pos.get_password())
+    print(f"row: {pos.node.pos[0]}")
+    print(f"col: {pos.node.pos[1]}")
     
     return pos.get_password()
 
 
-if __name__ == "__main__":
-    assert(solve("22/example.txt") == 6032)
-    assert(solve("22/input.txt") == 1428)
+def testing():
+    lines = get_input("22/example.txt")
+    map = make_map_nodes(lines)
+    map = set_border_rotations(map, example=True)
     
-    print(solve("22/input.txt"))
-    # assert(star1("22/input.txt") == 169525884255464)
-    # print(f'star 1: {star1("22/input.txt")}')
+    node = map[5][11]
+    pos = Pos(node, rot=RIGHT)
+    print(_get_face_number_example(pos.node.pos[0], pos.node.pos[1]))
+    print(pos)
+    
+    pos.do_operation("1")
+    print(pos)
+    
+    print(_get_face_number_example(pos.node.pos[0], pos.node.pos[1]))
 
-    # assert(star2("22/example.txt") == 301)
-    # assert(star2("22/input.txt") == 3247317268284)
-    # print(f'star 2: {star2("22/input.txt")}')
+
+if __name__ == "__main__":
+    
+    testing()
+
+    # assert(solve("22/example.txt") == 6032)
+    # assert(solve("22/input.txt") == 1428)
+    
+    assert(_get_face_number_example(0, 8) == 1)
+    assert(_get_face_number_example(4, 0) == 2)
+    assert(_get_face_number_example(4, 4) == 3)
+    assert(_get_face_number_example(4, 8) == 4)
+    assert(_get_face_number_example(8, 8) == 5)
+    assert(_get_face_number_example(8, 12) == 6)
+    
+    assert(_get_face_number(0, 50) == 1)
+    assert(_get_face_number(0, 100) == 2)
+    assert(_get_face_number(50, 50) == 3)
+    assert(_get_face_number(100, 0) == 4)
+    assert(_get_face_number(100, 50) == 5)
+    assert(_get_face_number(150, 0) == 6)
+    
+    assert(get_border_rotation(from_face=1, to_face=1) == BorderType.NONE)
+    assert(get_border_rotation(from_face=1, to_face=2) == BorderType.NONE)
+    assert(get_border_rotation(from_face=1, to_face=3) == BorderType.NONE)
+    assert(get_border_rotation(from_face=1, to_face=4) == BorderType.FLIP)
+    
+    # assert(solve("22/example.txt", star2=True) == 5031)
+    
+    # print(f'star 1: {solve("22/input.txt")}')
+    # print(f'star 2: {solve("22/input.txt", star2=True)}')

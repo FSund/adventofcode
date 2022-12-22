@@ -52,8 +52,8 @@ class MapNode:
 
 
 class Pos:
-    def __init__(self, pos: MapNode, rot):
-        self.pos = pos
+    def __init__(self, node: MapNode, rot: int):
+        self.node = node
         # 0 for right (>), 1 for down (v), 2 for left (<), and 3 for up (^)
         self.rot = rot
     
@@ -64,7 +64,14 @@ class Pos:
             "2": "<",
             "3": "^",
         }
-        return f"[{self.pos.pos[0]}, {self.pos.pos[1]}] {self.rot}"
+        return f"[{self.node.pos[0]}, {self.node.pos[1]}] {self.rot}"
+    
+    def get_password(self):
+        # The final password is the sum of 
+        # 1000 times the row, 
+        # 4 times the column, 
+        # and the facing.
+        return 1000*(self.node.pos[0]+1) + 4*(self.node.pos[1]+1) + self.rot
 
     def rotate(self, turn):
         if turn == "R":
@@ -78,19 +85,27 @@ class Pos:
 
     def _move_left(self, distance):
         for i in range(distance):
-            self.pos = self.pos.left
+            if self.node.left.type == NodeType.FREE:
+                # print("left")
+                self.node = self.node.left
         
     def _move_right(self, distance):
         for i in range(distance):
-            self.pos = self.pos.right
+            if self.node.right.type == NodeType.FREE:
+                # print("right")
+                self.node = self.node.right
     
     def _move_up(self, distance):
         for i in range(distance):
-            self.pos = self.pos.up
+            if self.node.up.type == NodeType.FREE:
+                # print("up")
+                self.node = self.node.up
     
     def _move_down(self, distance):
         for i in range(distance):
-            self.pos = self.pos.down
+            if self.node.down.type == NodeType.FREE:
+                # print("down")
+                self.node = self.node.down
     
     def move(self, d):
         if self.rot == 0:  # right
@@ -191,13 +206,22 @@ def star1_v2(filename):
             current = map[0][j]
             break
 
-    print(current)
+    # print(current)
     
     pos = Pos(current, 0)
     operations = re.split('([R,L])', lines[-1])
     for op in operations:
         pos.do_operation(op)
-        print(pos)
+        # print(pos)
+        
+    # print(pos)
+    # print(f"node: {pos.node}")
+    
+    # print(pos.get_password())
+    # print(f"row: {pos.node.pos[0]}")
+    # print(f"col: {pos.node.pos[1]}")
+    
+    return pos.get_password()
 
 
 if __name__ == "__main__":

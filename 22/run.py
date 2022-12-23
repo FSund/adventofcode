@@ -16,7 +16,7 @@ class NodeType(Enum):
     FREE = 0
     WALL = 1
 
-class BorderType(Enum):
+class BorderAction(Enum):
     NONE = 0
     LEFT = 1
     RIGHT = 2
@@ -31,6 +31,7 @@ class MapNode:
     def __init__(self, pos, type=NodeType.NONE):
         self.type = type
         self.pos = pos
+        self.face = None  # face number
 
         # neighbors
         self.right = None
@@ -39,10 +40,10 @@ class MapNode:
         self.down = None
         
         # border rotations
-        self.right_border = BorderType.NONE
-        self.left_border = BorderType.NONE
-        self.up_border = BorderType.NONE
-        self.down_border = BorderType.NONE
+        self.right_border_action = BorderAction.NONE
+        self.left_border_action = BorderAction.NONE
+        self.up_border_action = BorderAction.NONE
+        self.down_border_action = BorderAction.NONE
     
     def __repr__(self):
         return f"{self.type} [{self.pos[0]}, {self.pos[1]}]"
@@ -88,13 +89,13 @@ class Pos:
         self.rot = self.rot % 4
 
     def rotate_border(self, border_type):
-        if border_type == BorderType.NONE:
+        if border_type == BorderAction.NONE:
             pass
-        elif border_type == BorderType.LEFT:
+        elif border_type == BorderAction.LEFT:
             self.rotate("L")
-        elif border_type == BorderType.RIGHT:
+        elif border_type == BorderAction.RIGHT:
             self.rotate("R")
-        elif border_type == BorderType.FLIP:
+        elif border_type == BorderAction.FLIP:
             # yes
             self.rotate("R")
             self.rotate("R")
@@ -102,25 +103,25 @@ class Pos:
     def _move_left(self, distance):
         for i in range(distance):
             if self.node.left.type == NodeType.FREE:
-                self.rotate_border(self.node.left_border)
+                self.rotate_border(self.node.left_border_action)
                 self.node = self.node.left
         
     def _move_right(self, distance):
         for i in range(distance):
             if self.node.right.type == NodeType.FREE:
-                self.rotate_border(self.node.right_border)
+                self.rotate_border(self.node.right_border_action)
                 self.node = self.node.right
     
     def _move_up(self, distance):
         for i in range(distance):
             if self.node.up.type == NodeType.FREE:
-                self.rotate_border(self.node.up_border)
+                self.rotate_border(self.node.up_border_action)
                 self.node = self.node.up
     
     def _move_down(self, distance):
         for i in range(distance):
             if self.node.down.type == NodeType.FREE:
-                self.rotate_border(self.node.down_border)
+                self.rotate_border(self.node.down_border_action)
                 self.node = self.node.down
     
     def move(self, d):
@@ -296,15 +297,15 @@ def get_border_rotation(from_face, to_face, example=False):
     
     rot = border_map[from_face-1][to_face-1]
     if rot == "x": # 0 is not possible
-        return BorderType.NONE
+        return BorderAction.NONE
     elif rot == "N":  # no rotation
-        return BorderType.NONE
+        return BorderAction.NONE
     elif rot == "L":
-        return BorderType.LEFT
+        return BorderAction.LEFT
     elif rot == "R":
-        return BorderType.RIGHT
+        return BorderAction.RIGHT
     elif rot == "F":
-        return BorderType.FLIP
+        return BorderAction.FLIP
 
 
 def set_border_rotations(map, example=False):
@@ -329,6 +330,7 @@ def set_border_rotations(map, example=False):
             # skip unreachable nodes
             if node.type != NodeType.NONE:
                 from_face = get_face_number(i, j, example=example)
+                node.face = from_face
                 
                 # right
                 other = node.right
@@ -353,11 +355,77 @@ def set_border_rotations(map, example=False):
     return map
 
 
-def fix_star2_connections(map):
+def fix_star2_connections(map, faces, example=False):
     m = len(map)
     n = len(map[0])
-    # TODO
-    pass
+    
+    # RIGHT = 0
+    # DOWN = 1
+    # LEFT = 2
+    # UP = 3
+    face_transform = {
+        1: { RIGHT: 2, DOWN: 3, LEFT: 4, UP: 6,},
+        2: { RIGHT: 5, DOWN: 3, LEFT: 1, UP: 6,},
+        3: { RIGHT: 2, DOWN: 5, LEFT: 4, UP: 1,},
+        4: { RIGHT: 5, DOWN: 6, LEFT: 1, UP: 3,},
+        5: { RIGHT: 2, DOWN: 6, LEFT: 4, UP: 3,},
+        6: { RIGHT: 5, DOWN: 2, LEFT: 1, UP: 4,},
+    }
+    
+    # for face in range(len(faces)):
+    #     for node in faces[face]:
+    
+    # top/bottom
+    for i in range(0, m, 50):
+        for j in range(n):
+            current = map[i][j]
+            face = current.face
+            
+            # up
+            if current.up_border_action == BorderAction.NONE:
+                other_face = face_transform[face][UP]
+                pass
+            elif current.up_border_action == BorderAction.LEFT:
+                pass
+            elif current.up_border_action == BorderAction.RIGHT:
+                pass
+            elif current.up_border_action == BorderAction.FLIP:
+                pass
+            
+            # down
+            if current.down_border_action == BorderAction.NONE:
+                pass
+            elif current.down_border_action == BorderAction.LEFT:
+                pass
+            elif current.down_border_action == BorderAction.RIGHT:
+                pass
+            elif current.down_border_action == BorderAction.FLIP:
+                pass
+    
+    # left/right
+    for i in range(m):
+        for j in range(0, n, 50):
+            current = map[i][j]
+            
+    
+    return map
+
+
+def get_faces(map, example=False):
+    m = len(map)
+    n = len(map[0])
+    
+    faces = []
+    for i in range(6):
+        faces.append([])
+    
+    for i in range(m):
+        for j in range(n):
+            current = map[i][j]
+            face = current.face
+            faces[face].append(current)
+            
+    return faces
 
 
 def solve(filename, star2=False):
@@ -366,6 +434,8 @@ def solve(filename, star2=False):
     
     if star2:
         map = set_border_rotations(map, True if "example" in filename else False)
+        faces = get_faces(map)
+        map = fix_star2_connections(map)
 
     # find start
     current = None
@@ -429,10 +499,10 @@ if __name__ == "__main__":
     assert(_get_face_number(100, 50) == 5)
     assert(_get_face_number(150, 0) == 6)
     
-    assert(get_border_rotation(from_face=1, to_face=1) == BorderType.NONE)
-    assert(get_border_rotation(from_face=1, to_face=2) == BorderType.NONE)
-    assert(get_border_rotation(from_face=1, to_face=3) == BorderType.NONE)
-    assert(get_border_rotation(from_face=1, to_face=4) == BorderType.FLIP)
+    assert(get_border_rotation(from_face=1, to_face=1) == BorderAction.NONE)
+    assert(get_border_rotation(from_face=1, to_face=2) == BorderAction.NONE)
+    assert(get_border_rotation(from_face=1, to_face=3) == BorderAction.NONE)
+    assert(get_border_rotation(from_face=1, to_face=4) == BorderAction.FLIP)
     
     # assert(solve("22/example.txt", star2=True) == 5031)
     

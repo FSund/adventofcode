@@ -73,6 +73,10 @@ class Elf:
                 grid[self.pos[0], self.pos[1]] = 0
                 self.pos = (i, j)
                 grid[self.pos[0], self.pos[1]] = 1
+                
+                return True
+
+        return False
 
 
 def print_map(map):
@@ -86,14 +90,14 @@ def print_map(map):
     return lines
 
 
-def solve(filename, n_moves=10):
+def solve(filename, n_moves=10, star2=False):
     lines = get_input(filename)
     m = len(lines)
     n = len(lines[0])
     offset = (m, n)
     shape = (m + 2*offset[0], n + 2*offset[1])
     grid = np.zeros(shape, dtype=int)
-    print(grid.shape)
+    # print(grid.shape)
     elves = []
     for i in range(m):
         for j in range(n):
@@ -109,6 +113,8 @@ def solve(filename, n_moves=10):
     # print_map(map)
     # print()
     
+    # print(f"{len(elves) = }")
+    
     # global propose_idx
     propose_idx = cycle([NORTH, SOUTH, WEST, EAST])
     for i in range(n_moves):
@@ -119,10 +125,17 @@ def solve(filename, n_moves=10):
             elf.propose_move(grid, suggestions)
         
         # check number of proposed moves
-        assert(np.sum(np.sum(suggestions)) <= len(elves))
+        n_suggestions = np.sum(np.sum(suggestions))
+        assert(n_suggestions <= len(elves))
         
+        # print(f"{i}: {n_suggestions = }")
+        
+        n_moves = 0
         for elf in elves:
-            elf.do_move(grid, suggestions)
+            n_moves += elf.do_move(grid, suggestions)
+        
+        if n_moves == 0 and star2:
+            return i+1
 
         # print_map(map)
         # print()
@@ -148,23 +161,24 @@ def solve(filename, n_moves=10):
         assert(np.sum(np.sum(grid)) == len(elves))
     
     # print_map(map[i0-1:i1+2, j0-1:j1+2])
-    print(f"{i0 = }")
-    print(f"{i1 = }")
-    print(f"{j0 = }")
-    print(f"{j1 = }")
+
+    # print(f"{i0 = }")
+    # print(f"{i1 = }")
+    # print(f"{j0 = }")
+    # print(f"{j1 = }")
     
-    print(f"{i0-offset[0] = }")
-    print(f"{i1-offset[0] = }")
-    print(f"{j0-offset[1] = }")
-    print(f"{j1-offset[1] = }")
+    # print(f"{i0-offset[0] = }")
+    # print(f"{i1-offset[0] = }")
+    # print(f"{j0-offset[1] = }")
+    # print(f"{j1-offset[1] = }")
     
     # min_x = min(elves, key=lambda x: x.pos[0]).pos[0]
     # print(f"{min_x = }")
     
     height = i1 - i0 + 1
     width = j1 - j0 + 1
-    print(f"{width = }")
-    print(f"{height = }")
+    # print(f"{width = }")
+    # print(f"{height = }")
     
     return width*height - len(elves)
 
@@ -193,3 +207,7 @@ if __name__ == "__main__":
     print(f'star 1: {solve("23/input.txt")}')
     # 4246 is too high
     # 4162
+    
+    print(f'star 2: {solve("23/input.txt", n_moves=1000, star2=True)}')
+    # 17210 too high
+    # 985 too low

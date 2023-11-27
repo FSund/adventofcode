@@ -28,9 +28,10 @@ LEFT = 2
 UP = 3
 
 class MapNode:
-    def __init__(self, pos, type=NodeType.NONE):
+    def __init__(self, pos, aoc_pos, type=NodeType.NONE):
         self.type = type
-        self.pos = pos  # not really used for anything?
+        self.pos = pos  # position on 50x50 grid
+        self.aoc_pos = aoc_pos  # position on input grid (used to get result)
 
         # neighbors
         self.neighbors = [None]*4
@@ -176,9 +177,22 @@ def parse_input(lines, example=False):
                 faces[face][i].append(
                     MapNode(
                         pos=(i, j),
+                        aoc_pos=(i0+i, j0+j),
                         type=cmap[p]
                     )
                 )
+
+    def transform_from_string(transform_string):
+        if transform_string == "x": # 0 is not possible
+            return BorderAction.NONE
+        elif transform_string == "N":  # no rotation
+            return BorderAction.NONE
+        elif transform_string == "L":
+            return BorderAction.LEFT
+        elif transform_string == "R":
+            return BorderAction.RIGHT
+        elif transform_string == "F":
+            return BorderAction.FLIP
 
     # set up border connections
     if example:
@@ -187,12 +201,26 @@ def parse_input(lines, example=False):
         down = [4, 5, 5, 5, 2, 2]
         left = [3, 6, 2, 3, 3, 5]
         up = [2, 1, 1, 1, 4, 4]
-        # face_neighbors[LEFT][n-1] return face to the left of face n
+        
+        # usage: face_neighbors[LEFT][n-1] returns face to the left of face n
         face_neighbors = [None]*4
         face_neighbors[RIGHT] = right
         face_neighbors[DOWN] = down
         face_neighbors[LEFT] = left
         face_neighbors[UP] = up
+        
+        # usage: transforms[from_face][to_face]
+        transform_strings = [
+            # from_face == row
+            # to_face == col
+            # 1    2    3    4    5    6 
+            ["N", "F", "L", "N", "x", "F",],  # from face 1
+            ["F", "N", "N", "x", "F", "R",],  # from face 2
+            ["R", "N", "N", "N", "L", "x",],  # from face 3
+            ["N", "x", "N", "N", "N", "R",],  # from face 4
+            ["x", "F", "R", "N", "N", "N",],  # from face 5
+            ["F", "L", "x", "L", "N", "N",],  # from face 6
+        ]
     else:
         raise RuntimeError
         
@@ -201,11 +229,43 @@ def parse_input(lines, example=False):
         for i in range(6):
             face_neighbors[dir][i] -= 1
 
+    # convert using enum
+    transforms = []
+    for from_face in range(6):
+        transforms.append([])
+        for to_face in range(6):
+            transforms[from_face].append(transform_from_string(transform_strings[from_face][to_face]))
+
+    def get_neighbor(pos, from_face, to_face, translation):
+        # first find position `pos` on to_face
+        transform = transforms[from_face][to_face]
+        if transform == BorderAction.NONE:
+            ii = pos[0] + n
+            jj = pos[1] + n
+        elif transform == BorderAction.FLIP:
+            ii = pos[0]
+            jj = pos[1]
+        elif transform == BorderAction.LEFT:
+            pass
+        elif transform == BorderAction.RIGHT:
+            pass
+
+        # then translate and wrap around
+        ii = (ii + translation[0]) % n
+        jj = (jj + translation[1]) % n
+        return faces[to_face][ii][]
+        
+
     for idx in range(6):
+        from_face = idx
+
         # left/right borders
         for i in range(n):
             j = 0  # left
+            to_face = face_neighbors[LEFT][from_face]
+            
             faces[idx][i][j].neighbors[LEFT] = face_neighbors[LEFT][idx]
+
             j = n-1  # right
             faces[idx][i][j].neighbors[RIGHT] = face_neighbors[RIGHT][idx]
             

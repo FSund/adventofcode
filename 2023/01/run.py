@@ -11,79 +11,45 @@ digits = {
     "nine": "9",
 }
 
-
-def check_if_number1(line, i):
-    # check if character is a number
-    if line[i].isdigit():
-        return line[i]
-    
-    return None
-
-def check_if_number2(line, i):
+def check_if_number(line, i, second_star=False):
     # check if character is a number
     if line[i].isdigit():
         return line[i]
 
-    # check if substring is a number
-    for key in digits:
-        if i+len(key) > len(line):
-            continue
-        if line[i:i+len(key)] == key:
-            return digits[key]
+    if second_star:
+        # check if substring is a number
+        for key in digits:
+            if i+len(key) > len(line):
+                continue
+            if line[i:i+len(key)] == key:
+                return digits[key]
     
     return None
 
-def find_first_number1(line):
+def find_first_number(line, second_star=False):
     for i in range(len(line)):
-        maybe_code = check_if_number1(line, i)
+        maybe_code = check_if_number(line, i, second_star)
         if maybe_code is not None:
             return maybe_code
     
     raise RuntimeError("No number found in line")
 
-def find_first_number2(line):
-    for i in range(len(line)):
-        maybe_code = check_if_number2(line, i)
-        if maybe_code is not None:
-            return maybe_code
-    
-    raise RuntimeError("No number found in line")
-
-def find_last_number1(line):
+def find_last_number(line, second_star=False):
     # regular loop
     for i in range(len(line)):
-        maybe_code = check_if_number1(line, i)
+        maybe_code = check_if_number(line, i, second_star)
         if maybe_code is not None:
             code = maybe_code
         
     return code
 
-def find_last_number2(line):
-    # regular loop
-    for i in range(len(line)):
-        maybe_code = check_if_number2(line, i)
-        if maybe_code is not None:
-            code = maybe_code
-        
-    return code
-
-def find_code1(line):
+def find_code(line, second_star=False):
     code = ""
-    code += find_first_number1(line)
-    code += find_last_number1(line)
+    code += find_first_number(line, second_star)
+    code += find_last_number(line, second_star)
     assert code.isdigit()
     assert len(code) == 2
     return code
-
-
-def find_code2(line):
-    code = ""
-    code += find_first_number2(line)
-    code += find_last_number2(line)
-    assert code.isdigit()
-    assert len(code) == 2
-    return code
-
 
 def main(filename, first_star=True):
     lines = []
@@ -94,15 +60,27 @@ def main(filename, first_star=True):
     sum = 0
     for line in lines:
         if first_star:
-            code = find_code1(line)
+            code = find_code(line)
         else:
-            code = find_code2(line)
+            code = find_code(line, second_star=True)
         int_code = int(code)
         sum += int_code
 
     return sum
 
-if __name__ == "__main__":
+def check_if_number2(line, i):
+    check_if_number(line, i, second_star=True)
+
+def find_first_number2(line):
+    find_first_number(line, second_star=True)
+    
+def find_last_number2(line):
+    find_last_number(line, second_star=True)
+
+def find_code2(line):
+    find_code(line, second_star=True)
+
+def run_tests():
     assert(check_if_number2("one23", 0) == "1")
     assert(check_if_number2("1two3", 0) == "1")
     assert(check_if_number2("1two3", 1) == "2")
@@ -166,20 +144,19 @@ if __name__ == "__main__":
     assert(find_code2("1bjgnlhtxgx") == "11")
     assert(find_code2("87ninenjhxpnrhljkvnms3") == "83")
     assert(find_code2("123eightwofdfdf") == "12")
-    
-    
-    
-    # assert(check_if_number("six8b32csscsdgjsevenfivedlhzhc", 22) == "5")
 
-    ex = main("example.txt")
-    # print(f"Example: {ex}")
-    assert ex == 142, "example.txt failed"
+if __name__ == "__main__":
+    # run_tests()
+
+    example = main("example.txt")
+    print(f'Example: {example}')
+    assert example == 142, "example.txt failed"
 
     print(f'First star: {main("input.txt")}')
-    
     assert(main("input.txt", first_star=True) == 54239)
     
     print(f'Second star: {main("input.txt", first_star=False)}')
+    assert(main("input.txt", first_star=False) == 55343)
 
     
 # 50129 too low

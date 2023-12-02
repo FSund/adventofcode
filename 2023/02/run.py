@@ -89,7 +89,7 @@ if __name__ == "__main__":
     print(f'Example: {example}')
     
     print(f'Second star: {main("input.txt", first=False)}')
-    # assert(main("input.txt", first_star=False) == 55343)
+    assert(main("input.txt", first=False) == 65122)
 
     
 # 50129 too low

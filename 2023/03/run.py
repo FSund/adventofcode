@@ -27,7 +27,7 @@ def find_start_of_number(map, i, j):
     return j+1
 
 
-def main(filename, second=False):
+def star1(filename):
     lines = []
     with open(filename) as file:
         for line in file:
@@ -40,23 +40,6 @@ def main(filename, second=False):
     
     # make into nested lists to allow modification
     lines = [list(line) for line in lines]
-
-    if False:    
-        map = np.empty((0, len(lines[0])), dtype=int)
-        for line in lines:
-            map = np.vstack((map, np.asarray([list(line)])))
-        
-        # replace characters with -1
-        for i in range(map.shape[0]):
-            for j in range(map.shape[1]):
-                if map[i, j] == ".":
-                    map[i, j] = 0
-                elif not map[i, j].isdigit():
-                    map[i,j] = -1
-
-        map = map.astype(int)
-        print(map)
-    
     
     sum = 0
     for i in range(1, len(lines) - 1):
@@ -80,25 +63,43 @@ def main(filename, second=False):
                 sum += find_number_in_loc(lines, i-1, j)
     
     return sum
-                
-            
-            
-            
-    
-    # for i in range(map.shape[0]):
-    #     for j in range(map.shape[1]):
-    #         if map[i, j] == -1:
-    #             continue
-    #         else:
-    #             # create mask
-    #             mask = np.zeros(map.shape, dtype=int)
-    #             mask[i, j] = 1
-    
-    
-    
-    print(map)
 
-    return None
+
+def star2(filename):
+    lines = []
+    with open(filename) as file:
+        for line in file:
+            lines.append(line.strip("\n"))
+    
+    # pad with dots all around the edges
+    lines = ["." + line + "." for line in lines]
+    lines.append("." * len(lines[0]))
+    lines.insert(0, "." * len(lines[0]))
+    
+    # make into nested lists to allow modification
+    lines = [list(line) for line in lines]
+    
+    sum = 0
+    for i in range(1, len(lines) - 1):
+        for j in range(1, len(lines[0]) - 1):
+            val = lines[i][j]
+            if val == "*":
+                numbers = []
+                numbers.append(find_number_in_loc(lines, i-1, j+1))
+                numbers.append(find_number_in_loc(lines, i,   j+1))
+                numbers.append(find_number_in_loc(lines, i+1, j+1))
+                numbers.append(find_number_in_loc(lines, i+1, j))
+                numbers.append(find_number_in_loc(lines, i-1, j-1))
+                numbers.append(find_number_in_loc(lines, i,   j-1))
+                numbers.append(find_number_in_loc(lines, i+1, j-1))
+                numbers.append(find_number_in_loc(lines, i-1, j))
+                numbers = [x for x in numbers if x != 0]
+                if len(numbers) == 2:
+                    sum += numbers[0] * numbers[1]
+            else:
+                continue
+    
+    return sum
 
 
 def tests():
@@ -132,16 +133,12 @@ def tests():
 if __name__ == "__main__":
     tests()
 
-    example = main("example.txt")
-    # assert(example == 8)
+    example = star1("example.txt")
     print(f'Example: {example}')
     
-    print(f'First star: {main("input.txt")}')
-    # assert(main("input.txt") == 2879)
+    print(f'First star: {star1("input.txt")}')
+    assert(star1("input.txt") == 530495)
     
-    # example = main("example.txt", first=False)
-    # assert(example == 2286)
-    # print(f'Example: {example}')
+    assert(star2("example.txt") == 467835)
+    print(f'Second star: {star2("input.txt")}')
     
-    # print(f'Second star: {main("input.txt", first=False)}')
-    # assert(main("input.txt", first=False) == 65122)

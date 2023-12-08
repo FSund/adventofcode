@@ -64,17 +64,23 @@ def do_move(positions, m, instructions):
 
 def get_count(pos, m, instructions):
     count = 0
-    # print(f"start pos: {pos}")
+    z_pos = None
     while True:
         for ins in instructions:
             if ins == "L":
                 pos = m[pos][0]
             else:
                 pos = m[pos][1]
-            # print(f"pos: {pos}")
+
             count += 1
             if pos[-1] == "Z":
-                return count
+                if z_pos and pos == z_pos:
+                    return count
+                else:
+                    # found first z
+                    z_pos = pos
+                    # reset count, so we count length of z-to-z loop
+                    count = 0
 
 
 def star2(filename):
@@ -120,5 +126,6 @@ if __name__ == "__main__":
     print(f"Star 2 example {example}")
     assert(example == 6)
 
-    print(f'Second star: {star2("input.txt")}')
-    # 12833235391111
+    ans = star2("input.txt")
+    assert ans == 12833235391111
+    print(f'Second star: {ans}')

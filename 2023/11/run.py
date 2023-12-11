@@ -52,6 +52,36 @@ def matrix_to_str(m):
 
     return s
 
+def get_distance_star2(this, other, map, expansion=1000000):
+    dx = 0
+    # expansion = 100
+    r = range(this[0], other[0])
+    if this[0] > other[0]:
+        r = range(this[0], other[0], -1)
+    for i in r:
+        if np.all(map[i,:] == 0):
+            dx += expansion
+        else:
+            dx += 1
+    
+    dy = 0
+    r = range(this[1], other[1])
+    if this[1] > other[1]:
+        r = range(this[1], other[1], -1)
+    for j in r:
+        if np.all(map[:,j] == 0):
+            dy += expansion
+        else:
+            dy += 1
+        
+    return dx + dy
+
+
+def get_distance(this, other):
+    # manhattan distance
+    return abs(this[0] - other[0]) + abs(this[1] - other[1])
+
+
 class Galaxy:
     def __init__(self, idx, x, y):
         self.idx = idx
@@ -115,8 +145,57 @@ def star1(filename):
 
     return sum
     
-def star2(filename):
+def star2(filename, expansion=1000000):
     lines = get_input(filename)
+    m = input_to_matrix(lines)
+    # m = expand(m)
+    
+    # print(m)
+    
+    # galaxies = []
+    # for i in range(m.shape[0]):
+    #     for j in range(m.shape[1]):
+    #         if m[i,j] == 1:
+    #             galaxies.append((i,j))
+    
+    galaxies = []
+    k = 1
+    for i in range(m.shape[0]):
+        for j in range(m.shape[1]):
+            if m[i,j] == 1:
+                galaxies.append(Galaxy(k, i, j))
+                k += 1
+    # print(galaxies)
+    
+    # nearest = 
+    for idx, galaxy in enumerate(galaxies):
+        
+        # for other_galaxy in galaxies[idx+1:]:
+        for other_galaxy in galaxies[idx+1:]:
+            if other_galaxy == galaxy:
+                continue
+            # manhattan distance
+            # dist = abs(galaxy.x - other_galaxy.x) + abs(galaxy.y - other_galaxy.y)
+            dist = get_distance_star2((galaxy.x, galaxy.y), (other_galaxy.x, other_galaxy.y), m, expansion)
+            # if galaxy.distance > dist:
+            #     galaxy.distance = dist
+            #     galaxy.nearest = other_galaxy
+            
+            # find the length of the shortest path between every pair of galaxies
+            galaxy.sum_of_paths += dist
+
+    # print(nearest)
+    # print(galaxies)
+
+    # sum = 0
+    # for _, dist in nearest.values():
+    #     sum += dist
+    
+    sum = 0
+    for galaxy in galaxies:
+        sum += galaxy.sum_of_paths
+
+    return sum
     
 
 
@@ -143,6 +222,164 @@ def tests():
 .........#...
 #....#.......
 """)
+    
+    m = np.asarray([
+        [1,],
+        [0,],
+        [1,],
+    ])
+    d = get_distance_star2((0,0), (2,0), m)
+    assert d == 1000000 + 1, f"Distance: {d}"
+    
+    m = np.asarray([
+        [1,],
+        [0,],
+        [0,],
+        [1,],
+    ])
+    d = get_distance_star2((0,0), (3,0), m)
+    assert d == 2000000 + 1, f"Distance: {d}"
+    
+    m = np.asarray([
+        [1,],
+        [0,],
+        [1,],
+        [0,],
+        [1,],
+    ])
+    d = get_distance_star2((0,0), (4,0), m)
+    assert d == 2000000 + 2, f"Distance: {d}"
+    
+    m = np.asarray([
+        [1,],
+        [0,],
+        [0,],
+        [1,],
+        [0,],
+        [1,],
+    ])
+    d = get_distance_star2((0,0), (5,0), m)
+    assert d == 3000000 + 2, f"Distance: {d}"
+    
+    m = np.asarray([[1,0,1],])
+    d = get_distance_star2((0,0), (0,2), m)
+    assert d == 1000000 + 1, f"Distance: {d}"
+    
+    m = np.asarray([[1,0,0,1],])
+    d = get_distance_star2((0,0), (0,3), m)
+    assert d == 2000000 + 1, f"Distance: {d}"
+    
+    m = np.asarray([[1,0,1,0,1],])
+    d = get_distance_star2((0,0), (0,4), m)
+    assert d == 2000000 + 2, f"Distance: {d}"
+    
+    m = np.asarray([[1,0,0,0,1],])
+    d = get_distance_star2((0,0), (0,4), m)
+    assert d == 3000000 + 1, f"Distance: {d}"
+    
+    m = np.asarray([
+        [1, 0, 0],
+        [0, 0, 0],
+        [0, 0, 1],
+    ])
+    d = get_distance_star2((0,0), (2,2), m)
+    assert d == 2000000 + 2, f"Distance: {d}"
+    
+    m = np.asarray([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+    ])
+    d = get_distance_star2((0,0), (2,2), m)
+    assert d == 4, f"Distance: {d}"
+    
+    m = np.asarray([
+        [0, 0, 1],
+        [0, 0, 0],
+        [1, 0, 0],
+    ])
+    d = get_distance_star2((2,0), (0,2), m)
+    assert d == 2000000 + 2, f"Distance: {d}"
+    
+    m = np.asarray([
+        [0, 0, 0, 1],
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+    ])
+    d = get_distance_star2((2,0), (0,3), m)
+    assert d == 3000000 + 2, f"Distance: {d}"
+    d = get_distance_star2((2,0), (0,3), m, expansion=10)
+    assert d == 30 + 2, f"Distance: {d}"
+    
+    m = np.asarray([
+        [1, 0,],
+        [0, 1,],
+    ])
+    d = get_distance_star2((0,0), (1,1), m)
+    assert d == 2, f"Distance: {d}"
+    
+    m = np.asarray([
+        [1, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+    ])
+    d = get_distance_star2((0,0), (3,3), m)
+    assert d == 4000000 + 2, f"Distance: {d} != 4000000 + 2"
+    
+    m = np.asarray([
+        [1, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+    ])
+    d = get_distance_star2((0,0), (3,3), m)
+    assert d == 4000000 + 2, f"Distance: {d} != 4000000 + 2"
+    
+    m = np.asarray([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+    ])
+    d = get_distance_star2((0,0), (3,3), m)
+    assert d == 2000000 + 4
+    
+    m = np.asarray([
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+    ])
+    d = get_distance_star2((0,0), (3,3), m)
+    assert d == 3000000 + 3
+    
+    m = np.asarray([
+        [1, 1, 0, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+    ])
+    d = get_distance_star2((0,0), (3,3), m)
+    assert d == 2000000 + 4
+    
+    m = np.asarray([
+        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    ])
+    d = get_distance_star2((2,0), (0,3), m, expansion=10)
+    assert d == 10 + 2 + 2, f"Distance: {d}"
+    
+    s = star2("example.txt", expansion=10)
+    assert s == 1030, f"Sum: {s} != 1030"
 
 
 if __name__ == "__main__":
@@ -152,19 +389,18 @@ if __name__ == "__main__":
     print(f'Example: {example}')
     assert(example == 374)
     
-    print(f'First star: {star1("input.txt")}')
-    # assert(star1("input.txt") == 6838)
+    ans = star1("input.txt")
+    print(f'First star: {ans}')
+    assert(ans == 9693756)
     
-    # example = star2("example2.txt")
-    # print(f"Star 2 example: {example}")
+    example = star2("example.txt", expansion=100)
+    print(f"Star 2 example: {example}")
     # assert example == 10
     
     # assert star2("example3.txt") == 8
 
-    # ans = star2("input.txt")
-    # # assert ans == 12833235391111
-    # print(f'Second star: {ans}')
+    ans = star2("input.txt")
+    print(f'Second star: {ans}')
+    assert ans == 717878258016
 
-    # 6489 too high
-    # 3534 too high
-    # 712 too high
+    # 575363132488 too low

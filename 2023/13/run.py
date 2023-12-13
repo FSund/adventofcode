@@ -31,8 +31,8 @@ def check_horizontal_line_reflection(pattern: np.ndarray, ignore=None):
                 reflection = False
                 # print(f"Row {l} != {r}")
                 break
-        if reflection:
-            print(f"found horizontal line reflection, with {j} rows above it")
+        # if reflection:
+        #     print(f"found horizontal line reflection, with {j} rows above it")
         if reflection and (j != ignore):
             # print(f"found horizontal line reflection, with {j} rows above it")
             return j
@@ -102,7 +102,7 @@ def check_smudges(pattern: np.ndarray):
     
     original_above = check_horizontal_line_reflection(pattern)
     original_left_of = check_vertical_line_reflection(pattern)
-    print(f"original: {original_above = }, {original_left_of = }")
+    # print(f"original: {original_above = }, {original_left_of = }")
     
     for i in range(pattern.shape[0]):
         for j in range(pattern.shape[1]):
@@ -155,8 +155,8 @@ def star2(filename):
     pattern_idx = 0
     for line in lines:
         if line == "":
-            print(f"checking pattern {pattern_idx}")
-            print(f"checking pattern: \n{as_np(pattern)}")
+            # print(f"checking pattern {pattern_idx}")
+            # print(f"checking pattern: \n{as_np(pattern)}")
             pattern = as_np(pattern)
             # hor1 = check_horizontal_line_reflection(pattern)
             # ver1 = check_vertical_line_reflection(pattern)

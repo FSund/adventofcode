@@ -113,19 +113,19 @@ def move_beams(energized, beams, lines):
             
     return energized
 
-def star1(filename, initial_beams=None):
-    lines = get_input(filename)
+def run_calc(lines, initial_beam):
+    # lines = get_input(filename)
     # energized = [[0]*len(lines)]*len(lines[0])
     # energized = np.zeros((len(lines), len(lines[0])), dtype=bool)
     
     # one bool per direction
     energized = np.zeros((len(lines), len(lines[0]), 4), dtype=int)
     
-    if not initial_beams:
-        #               pos,   dir
-        beams = [Beam([0,-1], [0,1])]
-    else:
-        beams = initial_beams
+    # if not initial_beam:
+    #     #               pos,   dir
+    #     beams = [Beam([0,-1], [0,1])]
+    # else:
+    beams = [initial_beam]
     
     # initial conditions
     # for beam in beams:
@@ -137,11 +137,12 @@ def star1(filename, initial_beams=None):
             break
         iterations += 1
         if iterations % 10 == 0:
-            print(f"iteration {iterations}, beams {len(beams)}")
+            # print(f"iteration {iterations}, beams {len(beams)}")
             # print(energized)
+            pass
         energized2 = move_beams(np.copy(energized), beams, lines)
         if np.all(energized == energized2):
-            print("loop detected, stopping")
+            # print("loop detected, stopping")
             break
         else:
             energized = energized2
@@ -150,11 +151,94 @@ def star1(filename, initial_beams=None):
         # else:
         #     print_energized_map(energized)
 
-    if energized.shape[0] > 10:
-        print_energized_map(energized[:10,:10])
-    else:
-        print_energized_map(energized)
+    # if energized.shape[0] > 10:
+    #     print_energized_map(energized[:10,:10])
+    # else:
+    #     print_energized_map(energized)
     return count_energized(energized)
+
+def star1(filename):
+    lines = get_input(filename)
+    initial_beam = Beam([0,-1], [0,1])
+    return run_calc(lines, initial_beam)
+
+def star2(filename):
+    lines = get_input(filename)
+    
+    max_energized = 0
+
+    # left edge
+    for i in range(len(lines)):
+        initial_beam = Beam([i,-1], [0,1])
+        n = run_calc(lines, initial_beam)
+        if n > max_energized:
+            max_energized = n
+    
+    # right edge
+    for i in range(len(lines)):
+        initial_beam = Beam([i, len(lines[0])], [0,-1])
+        n = run_calc(lines, initial_beam)
+        if n > max_energized:
+            max_energized = n
+    
+    # top edge
+    for j in range(len(lines[0])):
+        initial_beam = Beam([-1, j], [1,0])
+        n = run_calc(lines, initial_beam)
+        if n > max_energized:
+            max_energized = n
+            
+    # bottom edge
+    for j in range(len(lines[0])):
+        initial_beam = Beam([len(lines), j], [-1,0])
+        n = run_calc(lines, initial_beam)
+        if n > max_energized:
+            max_energized = n
+    
+    # # top left corner
+    # initial_beam = Beam([0,0], [1,0])
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+    # initial_beam = Beam([0,0], [0,1])
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+        
+    # # top right corner
+    # initial_beam = Beam([0,len(lines[0])-1], [1,0])
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+    # initial_beam = Beam([0,len(lines[0])-1], [0,-1]) 
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+    
+    # # bottom left corner
+    # initial_beam = Beam([len(lines)-1,0], [-1,0])
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+    # initial_beam = Beam([len(lines)-1,0], [0,1])
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+    
+    # # bottom right corner
+    # initial_beam = Beam([len(lines)-1,len(lines[0])-1], [-1,0])
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+    # initial_beam = Beam([len(lines)-1,len(lines[0])-1], [0,-1])
+    # n = run_calc(lines, initial_beam)
+    # if n > max_energized:
+    #     max_energized = n
+    
+    return max_energized
+    
+    
+    
 
 def tests():
     pass
@@ -169,12 +253,13 @@ if __name__ == "__main__":
     ans = star1("input.txt")
     print(f"star 1: {ans}")
     
-    # example = star2("example.txt")
-    # print(f"example star 2: {example}")
-    # assert example == 145
+    ans = star2("example.txt")
+    print(f"example star 2: {ans}")
+    assert ans == 51
     
-    # example = star2("input.txt")
-    # print(f"star 2: {example}")
+    ans = star2("input.txt")
+    print(f"star 2: {ans}")
     # # assert example == 145
     
+    # 7792 too low
     

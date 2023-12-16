@@ -18,15 +18,23 @@ class Beam:
     pos: list[int]
     vel: list[int]
 
-def count_energized(energized):
+def count_energized(_energized):
     count = 0
+    if len(_energized.shape) == 3:
+        energized = np.sum(_energized, axis=2)
+    else:
+        energized = _energized
     for i in range(len(energized)):
         for j in range(len(energized[0])):
             if energized[i, j] > 0:
                 count += 1
     return count
 
-def print_energized_map(energized):
+def print_energized_map(_energized):
+    if len(_energized.shape) == 3:
+        energized = np.sum(_energized, axis=2)
+    else:
+        energized = _energized
     for i in range(energized.shape[0]):
         for j in range(energized.shape[1]):
             if energized[i, j] > 0:
@@ -35,8 +43,7 @@ def print_energized_map(energized):
                 print(".", end="")
         print()
 
-@cache
-def move_beams(beams, lines):
+def move_beams(energized, beams, lines):
     n = len(beams)
     for idx in range(n)[::-1]: # reverse order to not loop through new beams
         beam = beams[idx]
@@ -50,7 +57,17 @@ def move_beams(beams, lines):
 
         i = beam.pos[0]
         j = beam.pos[1]
-        energized[i,j] += 1
+        # energized[i,j] = 1
+        
+        # one bool per direction
+        if beam.vel[0] == 0 and beam.vel[1] == 1:  # down
+            energized[i,j,0] = 1
+        elif beam.vel[0] == 0 and beam.vel[1] == -1:  # up
+            energized[i,j,1] = 1
+        elif beam.vel[0] == 1 and beam.vel[1] == 0:  # right
+            energized[i,j,2] = 1
+        elif beam.vel[0] == -1 and beam.vel[1] == 0:  # left
+            energized[i,j,3] = 1
         
         if lines[i][j] == ".":
             continue
@@ -78,15 +95,26 @@ def move_beams(beams, lines):
             else:
                 # do nothing if going up or down
                 pass
+            
+    return energized
 
-def star1(filename):
+def star1(filename, initial_beams=None):
     lines = get_input(filename)
     # energized = [[0]*len(lines)]*len(lines[0])
-    energized = np.zeros((len(lines), len(lines[0])), dtype=int)
-    #         pos,   dir
-    beams = [Beam([0,0], [0,1])]
-    for beam in beams:
-        energized[beam.pos[0], beam.pos[1]] += 1
+    # energized = np.zeros((len(lines), len(lines[0])), dtype=bool)
+    
+    # one bool per direction
+    energized = np.zeros((len(lines), len(lines[0]), 4), dtype=int)
+    
+    if not initial_beams:
+        #               pos,   dir
+        beams = [Beam([0,-1], [0,1])]
+    else:
+        beams = initial_beams
+    
+    # initial conditions
+    # for beam in beams:
+    #     energized[beam.pos[0], beam.pos[1]] += 1
 
     iterations = 0
     while True:
@@ -95,10 +123,22 @@ def star1(filename):
         iterations += 1
         if iterations % 100 == 0:
             print(f"iteration {iterations}, beams {len(beams)}")
-        move_beams(beams, lines)
+            # print(energized)
+        energized2 = move_beams(np.copy(energized), beams, lines)
+        if np.all(energized == energized2):
+            print("loop detected, stopping")
+            break
+        else:
+            energized = energized2
+        # if energized.shape[0] > 10:
+        #     print_energized_map(energized[:10,:10])
+        # else:
+        #     print_energized_map(energized)
 
-    # print([en for en in energized])
-    print_energized_map(energized)
+    if energized.shape[0] > 10:
+        print_energized_map(energized[:10,:10])
+    else:
+        print_energized_map(energized)
     return count_energized(energized)
 
 def tests():
@@ -107,12 +147,12 @@ def tests():
 if __name__ == "__main__":
     tests()
 
-    example = star1("example.txt")
-    print(f"example star 1: {example}")
-    # assert example == 1320
+    ans = star1("example.txt")
+    print(f"example star 1: {ans}")
+    assert ans == 46, f"wrong answer: {ans}"
     
-    # example = star1("input.txt")
-    # print(f"star 1: {example}")
+    # ans = star1("input.txt")
+    # print(f"star 1: {ans}")
     
     # example = star2("example.txt")
     # print(f"example star 2: {example}")

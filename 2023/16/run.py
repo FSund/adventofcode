@@ -57,7 +57,22 @@ def move_beams(energized, beams, lines):
 
         i = beam.pos[0]
         j = beam.pos[1]
-        # energized[i,j] = 1
+        if beam.vel[0] == 0 and beam.vel[1] == 1:  # down
+            if energized[i, j, 0]:
+                beams.remove(beam)
+                continue
+        elif beam.vel[0] == 0 and beam.vel[1] == -1:  # up
+            if energized[i, j, 1]:
+                beams.remove(beam)
+                continue
+        elif beam.vel[0] == 1 and beam.vel[1] == 0:  # right
+            if energized[i, j, 2]:
+                beams.remove(beam)
+                continue
+        elif beam.vel[0] == -1 and beam.vel[1] == 0:  # left
+            if energized[i, j, 3]:
+                beams.remove(beam)
+                continue
         
         # one bool per direction
         if beam.vel[0] == 0 and beam.vel[1] == 1:  # down
@@ -121,7 +136,7 @@ def star1(filename, initial_beams=None):
         if len(beams) == 0:
             break
         iterations += 1
-        if iterations % 100 == 0:
+        if iterations % 10 == 0:
             print(f"iteration {iterations}, beams {len(beams)}")
             # print(energized)
         energized2 = move_beams(np.copy(energized), beams, lines)
@@ -151,8 +166,8 @@ if __name__ == "__main__":
     print(f"example star 1: {ans}")
     assert ans == 46, f"wrong answer: {ans}"
     
-    # ans = star1("input.txt")
-    # print(f"star 1: {ans}")
+    ans = star1("input.txt")
+    print(f"star 1: {ans}")
     
     # example = star2("example.txt")
     # print(f"example star 2: {example}")

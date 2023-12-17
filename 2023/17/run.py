@@ -115,67 +115,7 @@ def ultra_crucible(grid, target=None):
                 else:  # new_direction == direction
                     if new_consecutive_moves <= max_consecutive_moves:
                         heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
-                continue
-                
-                # if new_consecutive_moves == 1:
-                #     # all moves are valid if we are at the start of a new direction
-                #     heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
-                if new_consecutive_moves < min_consecutive_moves:
-                    # can only continue straight if we are below the min consecutive moves
-                    if new_direction == direction:
-                        heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
-                
-                elif new_consecutive_moves <= max_consecutive_moves:
-                    # can turn or continue if we are between the min and max consecutive moves
-                    heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
-                else:
-                    # can only turn if we are above the max consecutive moves
-                    if new_direction != direction:
-                        heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
-                
-                # if min_consecutive_moves < new_consecutive_moves <= max_consecutive_moves:
-                #     new_path = path + [(row, col)]  # Append current position to the path
-                #     heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
 
-# def ultra2(grid, target=None):
-#     rows, cols = len(grid), len(grid[0])
-#     start = (0, 0, 0, 0)  # (row, col, direction, consecutive_moves)
-#     queue = [(0, start, [])]  # (total cost, current node, current path)
-#     visited = set()
-    
-#     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Right, Down, Left, Up
-#     if target is None:
-#         target = (rows - 1, cols - 1)
-
-#     while queue:
-#         cost, (row, col, direction, consecutive_moves), path = heapq.heappop(queue)
-
-#         if (row, col, direction, consecutive_moves) in visited:
-#             continue
-        
-#         visited.add((row, col, direction, consecutive_moves))
-
-#         if row == target[0] and col == target[1]:
-#             return cost, path + [(row, col)]
-        
-#         for i in range(len(directions)):
-#             new_row = row + directions[i][0]
-#             new_col = col + directions[i][1]
-#             new_direction = i
-
-#             if 0 <= new_row < rows and 0 <= new_col < cols and new_direction != (direction + 2) % 4:
-#                 if consecutive_moves < 10:  # Check if we haven't moved 10 steps in the same direction
-#                     new_cost = cost + grid[new_row][new_col]
-#                     new_consecutive_moves = consecutive_moves + 1 if direction == new_direction else 1
-                    
-#                     if new_consecutive_moves >= 4:  # Enforce at least 4 consecutive moves
-#                         new_path = path + [(row, col)]  # Append current position to the path
-#                         heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
-#                 else:  # Forced to change direction after 10 steps
-#                     new_cost = cost + grid[new_row][new_col]
-#                     new_consecutive_moves = 1  # Reset consecutive moves to 1
-#                     new_path = path + [(row, col)]  # Append current position to the path
-#                     heapq.heappush(queue, (new_cost, (new_row, new_col, new_direction, new_consecutive_moves), new_path))
 
 def to_int(_lines):
     lines = []

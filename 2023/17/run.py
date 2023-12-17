@@ -59,7 +59,7 @@ def visualize_path(grid, path):
 
 def shortest_path_with_constraints(grid, target=None):
     rows, cols = len(grid), len(grid[0])
-    start = (0, 0, 0, 0)  # (row, col, direction, distance, consecutive_moves)
+    start = (0, 0, 0, 0)  # (row, col, direction, consecutive_moves)
     queue = [(0, start, [])]  # (total cost, current node, current path)
     visited = set()
     
@@ -69,18 +69,13 @@ def shortest_path_with_constraints(grid, target=None):
 
     while queue:
         cost, (row, col, direction, consecutive_moves), path = heapq.heappop(queue)
-        # if row == 0 and col == 0:
-        #     cost = 0
-        # print(f"{cost=}, {row=}, {col=}")
 
-        if (row, col, direction) in visited:
+        if (row, col, direction, consecutive_moves) in visited:
             continue
         
-        visited.add((row, col, direction))
+        visited.add((row, col, direction, consecutive_moves))
 
         if row == target[0] and col == target[1]:
-            # Return both the cost and the path when reaching the destination
-            # cost = cost - grid[0][0]
             return cost, path + [(row, col)]
         
         for i in range(len(directions)):
@@ -112,8 +107,8 @@ def star1(filename):
     # print(lines)
     
     cost, path = shortest_path_with_constraints(lines)
-    for node in path:
-        print(node)
+    # for node in path:
+    #     print(node)
     return cost
 
 def tests():
@@ -183,14 +178,14 @@ def tests():
     visualize_path(lines, path)
 
 if __name__ == "__main__":
-    tests()
+    # tests()
 
     ans = star1("example.txt")
     print(f"example star 1: {ans}")
     assert ans == 102, f"wrong answer: {ans}"
     
-    # ans = star1("input.txt")
-    # print(f"star 1: {ans}")
+    ans = star1("input.txt")
+    print(f"star 1: {ans}")
     # 1078 too high
     # 1077 too high
     

@@ -86,95 +86,6 @@ def star1(filename):
     vol = grid.shape[0] * grid.shape[1] - np.sum((grid == 2))
     return vol
 
-def find_vertices_and_edges(lines):
-    pos = [0,0]
-    verts = []
-    edge_points = []
-    for line in lines:
-        direction, length = get_instruction(line)
-        
-        for i in range(length):
-            pos[0] += direction[0]
-            pos[1] += direction[1]
-            edge_points.append(tuple(pos))
-        
-        # pos[0] += direction[0] * length
-        # pos[1] += direction[1] * length
-        verts.append(tuple(pos))
-    
-    # append manhattan movement to the start to avoid diagonal line at the end
-    # verts.append((verts[0][0] + pos[0], verts[0][1]))
-    
-    # add start
-    length = pos[0] + pos[1]
-    direction = (
-        1 if pos[0] < 0 else -1,
-        1 if pos[1] < 0 else -1,
-    )
-    for i in range(length):
-        pos[0] += direction[0]
-        pos[1] += direction[1]
-        edge_points.append(tuple(pos))
-    
-    verts.append(tuple(pos))
-    assert pos[0] == 0 and pos[1] == 0, f"wrong end pos: {pos}"
-    
-    print(len(edge_points))
-    
-    return verts
-
-def find_vertices(lines):
-    pos = [0,0]
-    verts = [tuple(pos)]  # add start
-    for line in lines:
-        direction, length = get_instruction(line)
-        
-        pos[0] += direction[0] * length
-        pos[1] += direction[1] * length
-        verts.append(tuple(pos))
-
-    # # add start
-    # verts.append(verts[0])
-    
-    return verts
-
-def find_vertices2(lines):
-    pos = [0,0]
-    verts = [tuple(pos)]  # add start
-    previous_dir_name = None
-    for line in lines:
-        direction, dir_name, length = get_instruction_and_dir_name(line)
-        
-        pos[0] += direction[0] * length
-        pos[1] += direction[1] * length
-        
-        # check next move
-        if previous_dir_name is not None:
-            if previous_dir_name == "R" and dir_name == "D":
-                pos[1] += 1
-            elif previous_dir_name == "D" and dir_name == "L":
-                pos[0] += 1
-            elif previous_dir_name == "L" and dir_name == "U":
-                pos[1] -= 1
-            elif previous_dir_name == "U" and dir_name == "R":
-                pos[0] -= 1
-            elif previous_dir_name == "R" and dir_name == "U":
-                pos[1] -= 1
-            elif previous_dir_name == "D" and dir_name == "R":
-                pos[0] -= 1
-            elif previous_dir_name == "L" and dir_name == "D":
-                pos[1] += 1
-            elif previous_dir_name == "U" and dir_name == "L":
-                pos[0] += 1
-            else:
-                raise Exception(f"wrong direction: {previous_dir_name} -> {dir_name}")
-        
-        verts.append(tuple(pos))
-
-    # # add start
-    # verts.append(verts[0])
-    
-    return verts
 
 def find_vertices_and_extra(lines):
     pos = [0,0]
@@ -236,27 +147,6 @@ def get_instruction(line):
     }
     return d[direction], length
 
-def get_instruction_and_dir_name(line):
-    direction, length, code = line.split(" ")
-    code = code[2:-1]
-    length, direction = code_to_instruction(code)
-    
-    # 0 means R, 1 means D, 2 means L, and 3 means U
-    d = {
-        0: ( 0, 1),  # right
-        1: ( 1, 0),  # down
-        2: ( 0,-1),  # left
-        3: (-1, 0),  # up
-        
-    }
-    dir_name = {
-        0: "R",
-        1: "D",
-        2: "L",
-        3: "U",
-    }
-    return d[direction], dir_name, length
-
 def shoelace_formula(points):
     """
     https://en.wikipedia.org/wiki/Shoelace_formula
@@ -265,26 +155,6 @@ def shoelace_formula(points):
     y = [p[1] for p in points]
     A = 1/2 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
     return int(A)
-    
-    # max_x = max(x)
-    # min_x = min(x)
-    # min_y = min(y)
-    # max_y = max(y)
-    # return int(A) + (max_x - min_x) + (max_y - min_y) + 1
-
-def trapezoid_area(points):
-    """
-    https://en.wikipedia.org/wiki/Trapezoid
-    """
-    a = 0
-    for i in range(len(points) - 1):
-        x1 = points[i][0]
-        y1 = points[i][1]
-        x2 = points[i+1][0]
-        y2 = points[i+1][1]
-        a += (y1 + y2)*(x1 - x2)
-    
-    return int(abs(a) / 2)
 
 def plot_path(points):
     import matplotlib.pyplot as plt
@@ -298,12 +168,9 @@ def plot_path(points):
 
 def star2(filename):
     lines = get_input(filename)
-    # verts = find_vertices(lines)
     verts, down_moves, left_moves = find_vertices_and_extra(lines)
     plot_path(verts)
     area = shoelace_formula(verts)
-    # area = trapezoid_area(verts)
-    # area = calculate_enclosed_area(verts)
     return area + down_moves + left_moves + 1
 
 def tests():
@@ -346,7 +213,7 @@ def tests():
         (1, 0),
     ]
     a = shoelace_formula(points)
-    assert a == 4, f"wrong area: {a} != 4"
+    assert a == 1, f"wrong area: {a} != 4"
     points = [
         (0, 0),
         (0, 10),
@@ -354,7 +221,7 @@ def tests():
         (10, 0),
     ]
     a = shoelace_formula(points) 
-    assert a == 100 + 10 + 10 + 1, f"wrong area: {a} != 120"
+    assert a == 100
     points = [
         (0, 0),
         (0, 10),
@@ -364,7 +231,7 @@ def tests():
         (10, 0),
     ]
     a = shoelace_formula(points)
-    assert a == 231, f"wrong area: {a} != 231"
+    assert a == 200
     points = [
         (0,0),
         (10,0),
@@ -373,8 +240,7 @@ def tests():
         (10,10),
         (0,10),
     ]
-    assert shoelace_formula(points) == 231
-    # assert shoelace_formula(points) == trapezoid_area(points)
+    assert shoelace_formula(points) == 200
     
     points = [
         (0,0),
@@ -397,7 +263,7 @@ def tests():
     
 
 if __name__ == "__main__":
-    # tests()
+    tests()
 
     ans = star1("example.txt")
     print(f"example star 1: {ans}")
@@ -413,7 +279,4 @@ if __name__ == "__main__":
     
     ans = star2("input.txt")  
     print(f"star 2: {ans}")
-    assert ans > 79088771669566
     assert ans == 79088855654037
-    # 79088771669566 too low
-    # 79088855654036

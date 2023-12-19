@@ -59,126 +59,6 @@ def do_workflow(workflows, key, item):
             action = w
             return do_action(action, item)
 
-# def get_new_range(current_range, rule):
-#     rule_int = int(rule[2:])
-#     if rule[1] == ">":
-#         return range(rule_int+1, current_range.stop)
-#     else:
-#         return range(current_range.start, rule_int)
-
-def count_accepted_old(workflows, key, x_range, m_range, a_range, s_range):
-    workflow = workflows[key]
-    
-    def do_action(action, x_range, m_range, a_range, s_range):
-        if action == "A":
-            # accepted
-            return len(x_range) * len(m_range) * len(a_range) * len(s_range)
-        elif action == "R":
-            # rejected
-            return 0
-        else:
-            key = action
-            return count_accepted(workflows, key, x_range, m_range, a_range, s_range)
-    
-    n_accepted = 0
-    for w in workflow:
-        if ":" in w:
-            rule, action = w.split(":")
-            rule_int = int(rule[2:])
-            operator = rule[1]
-            if rule[0] == "x":
-                if operator == ">":
-                    if x_range.start > rule_int and x_range.stop > rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # split range
-                        x_range = range(x_range.start, rule_int)  # this range is false
-                        range2 = range(rule_int+1, x_range.stop)  # this range is true
-                        # n_accepted += do_action(action, range1, m_range, a_range, s_range) + do_action(action, range2, m_range, a_range, s_range)
-                        n_accepted += do_action(action, range2, m_range, a_range, s_range)
-                        # x_range = range(rule_int+1, x_range.stop)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                else: # operator == "<"
-                    if x_range.start < rule_int and x_range.stop < rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # x_range = range(x_range.start, rule_int)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                        range1 = range(x_range.start, rule_int)  # this range is true
-                        x_range = range(rule_int+1, x_range.stop)  # this range is false
-                        # n_accepted += do_action(action, range1, m_range, a_range, s_range) + do_action(action, range2, m_range, a_range, s_range)
-                        n_accepted += do_action(action, range1, m_range, a_range, s_range)
-            elif rule[0] == "m":
-                if operator == ">":
-                    if m_range.start > rule_int and m_range.stop > rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # m_range = range(rule_int+1, m_range.stop)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                        m_range = range(m_range.start, rule_int)  # this range is false
-                        range2 = range(rule_int+1, m_range.stop)  # this range is true
-                        # n_accepted += do_action(action, x_range, range1, a_range, s_range) + do_action(action, x_range, range2, a_range, s_range)
-                        n_accepted += do_action(action, x_range, range2, a_range, s_range)
-                else:
-                    if m_range.start < rule_int and m_range.stop < rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # m_range = range(m_range.start, rule_int)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                        range1 = range(m_range.start, rule_int)  # this range is true
-                        m_range = range(rule_int+1, m_range.stop)  # this range is false
-                        # n_accepted += do_action(action, x_range, range1, a_range, s_range) + do_action(action, x_range, range2, a_range, s_range)
-                        n_accepted += do_action(action, x_range, range1, a_range, s_range)
-            elif rule[0] == "a":
-                if operator == ">":
-                    if a_range.start > rule_int and a_range.stop > rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # a_range = range(rule_int+1, a_range.stop)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                        a_range = range(a_range.start, rule_int)  # this range is false
-                        range2 = range(rule_int+1, a_range.stop)  # this range is true
-                        # n_accepted += do_action(action, x_range, m_range, range1, s_range) + do_action(action, x_range, m_range, range2, s_range)
-                        n_accepted += do_action(action, x_range, m_range, range2, s_range)
-                else:
-                    if a_range.start < rule_int and a_range.stop < rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # a_range = range(a_range.start, rule_int)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                        range1 = range(a_range.start, rule_int)  # this range is true
-                        a_range = range(rule_int+1, a_range.stop)  # this range is false
-                        # n_accepted += do_action(action, x_range, m_range, range1, s_range) + do_action(action, x_range, m_range, range2, s_range)
-                        n_accepted += do_action(action, x_range, m_range, range1, s_range)
-            elif rule[0] == "s":
-                if operator == ">":
-                    if s_range.start > rule_int and s_range.stop > rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # s_range = range(rule_int+1, s_range.stop)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                        s_range = range(s_range.start, rule_int)  # this range is false
-                        range2 = range(rule_int+1, s_range.stop)  # this range is true
-                        # n_accepted += do_action(action, x_range, m_range, a_range, range1) + do_action(action, x_range, m_range, a_range, range2)
-                        n_accepted += do_action(action, x_range, m_range, a_range, range2)
-                else:
-                    if s_range.start < rule_int and s_range.stop < rule_int:
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    else:
-                        # s_range = range(s_range.start, rule_int)
-                        # n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                        range1 = range(s_range.start, rule_int)  # this range is true
-                        s_range = range(rule_int+1, s_range.stop)  # this range is false
-                        # n_accepted += do_action(action, x_range, m_range, a_range, range1) + do_action(action, x_range, m_range, a_range, range2)
-                        n_accepted += do_action(action, x_range, m_range, a_range, range1)
-        
-            # n_accepted += do_action(action, x_range, m_range, a_range, s_range)    
-        else:
-            # last rule, always performed
-            n_accepted += do_action(w, x_range, m_range, a_range, s_range)
-            
-    return n_accepted
-
 def count_accepted(workflows, key, x_range, m_range, a_range, s_range):
     workflow = workflows[key]
     
@@ -388,13 +268,6 @@ def star2(filename):
         w[key] = rules
         
     workflows = w
-    # n_accepted = 0
-    # for x in range(1, 4001):
-    #     print(f"x: {x}")
-    #     for m in range(1, 4001):
-    #         for a in range(1, 4001):
-    #             for s in range(1, 4001):
-    #                 n_accepted += count_accepted(workflows, "in", x, m, a, s)
     n_accepted = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
     return n_accepted
 
@@ -443,4 +316,4 @@ if __name__ == "__main__":
     
     ans = star2("input.txt")  
     print(f"star 2: {ans}")
-    # assert ans == 79088855654037
+    assert ans == 132186256794011

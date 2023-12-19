@@ -59,19 +59,22 @@ def do_workflow(workflows, key, item):
             action = w
             return do_action(action, item)
 
-def count_accepted(workflows, key, x_range, m_range, a_range, s_range):
+def count_accepted(workflows, key, ranges):
     workflow = workflows[key]
     
-    def do_action(action, x_range, m_range, a_range, s_range):
+    def do_action(action, ranges):
         if action == "A":
             # accepted
-            return len(x_range) * len(m_range) * len(a_range) * len(s_range)
+            accepted_count = 1
+            for r in ranges:
+                accepted_count *= len(r)
+            return accepted_count
         elif action == "R":
             # rejected
             return 0
         else:
             key = action
-            return count_accepted(workflows, key, x_range, m_range, a_range, s_range)
+            return count_accepted(workflows, key, ranges)
     
     n_accepted = 0
     for w in workflow:
@@ -79,145 +82,47 @@ def count_accepted(workflows, key, x_range, m_range, a_range, s_range):
             rule, action = w.split(":")
             rule_int = int(rule[2:])
             operator = rule[1]
-            if rule[0] == "x":
-                if operator == ">":
-                    if x_range.start > rule_int and x_range.stop > rule_int:
-                        # whole range passes check
-                        pass
-                    elif x_range.start < rule_int and x_range.stop < rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(rule_int+1, x_range.stop)
-                        n_accepted += do_action(action, accepted_range, m_range, a_range, s_range)
-
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        x_range = range(x_range.start, rule_int+1)
-                else: # operator == "<"
-                    if x_range.start < rule_int and x_range.stop < rule_int:
-                        # whole range passes check
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    elif x_range.start > rule_int and x_range.stop > rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(x_range.start, rule_int)
-                        n_accepted += do_action(action, accepted_range, m_range, a_range, s_range)
-
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        x_range = range(rule_int, x_range.stop)
-            elif rule[0] == "m":
-                if operator == ">":
-                    if m_range.start > rule_int and m_range.stop > rule_int:
-                        # whole range passes check
-                        pass
-                    elif m_range.start < rule_int and m_range.stop < rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(rule_int+1, m_range.stop)
-                        n_accepted += do_action(action, x_range, accepted_range, a_range, s_range)
-
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        m_range = range(m_range.start, rule_int+1)
+            idx = {"x": 0, "m": 1, "a": 2, "s": 3}[rule[0]]
+            r = ranges[idx]
+            
+            if operator == ">":
+                if r.start > rule_int and r.stop > rule_int:
+                    # whole range passes check
+                    pass
+                elif r.start < rule_int and r.stop < rule_int:
+                    # no part of range passes check
+                    continue
                 else:
-                    if m_range.start < rule_int and m_range.stop < rule_int:
-                        # whole range passes check
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    elif m_range.start > rule_int and m_range.stop > rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(m_range.start, rule_int)
-                        n_accepted += do_action(action, x_range, accepted_range, a_range, s_range)
+                    # this range passes check
+                    # should perform action
+                    ranges2 = ranges.copy()
+                    ranges2[idx] = range(rule_int+1, r.stop)
+                    n_accepted += do_action(action, ranges2)
 
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        m_range = range(rule_int, m_range.stop)
-            elif rule[0] == "a":
-                if operator == ">":
-                    if a_range.start > rule_int and a_range.stop > rule_int:
-                        # whole range passes check
-                        pass
-                    elif a_range.start < rule_int and a_range.stop < rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(rule_int+1, a_range.stop)
-                        n_accepted += do_action(action, x_range, m_range, accepted_range, s_range)
-
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        a_range = range(a_range.start, rule_int+1)
+                    # this range does not pass check
+                    # this range should go to the next rule
+                    ranges[idx] = range(r.start, rule_int+1)
+            else:  # operator == "<"
+                if r.start < rule_int and r.stop < rule_int:
+                    # whole range passes check
+                    n_accepted += do_action(action, ranges)
+                elif r.start > rule_int and r.stop > rule_int:
+                    # no part of range passes check
+                    continue
                 else:
-                    if a_range.start < rule_int and a_range.stop < rule_int:
-                        # whole range passes check
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    elif a_range.start > rule_int and a_range.stop > rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(a_range.start, rule_int)
-                        n_accepted += do_action(action, x_range, m_range, accepted_range, s_range)
+                    # this range passes check
+                    # should perform action
+                    ranges2 = ranges.copy()
+                    ranges2[idx] = range(r.start, rule_int)
+                    n_accepted += do_action(action, ranges2)
 
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        a_range = range(rule_int, a_range.stop)
-            elif rule[0] == "s":
-                if operator == ">":
-                    if s_range.start > rule_int and s_range.stop > rule_int:
-                        # whole range passes check
-                        pass
-                    elif s_range.start < rule_int and s_range.stop < rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(rule_int+1, s_range.stop)
-                        n_accepted += do_action(action, x_range, m_range, a_range, accepted_range)
-
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        s_range = range(s_range.start, rule_int+1)
-                else:
-                    if s_range.start < rule_int and s_range.stop < rule_int:
-                        # whole range passes check
-                        n_accepted += do_action(action, x_range, m_range, a_range, s_range)
-                    elif s_range.start > rule_int and s_range.stop > rule_int:
-                        # no part of range passes check
-                        continue
-                    else:
-                        # this range passes check
-                        # should perform action
-                        accepted_range = range(s_range.start, rule_int)
-                        n_accepted += do_action(action, x_range, m_range, a_range, accepted_range)
-
-                        # this range does not pass check
-                        # this range should go to the next rule
-                        s_range = range(rule_int, s_range.stop)
-
+                    # this range does not pass check
+                    # this range should go to the next rule
+                    ranges[idx] = range(rule_int, r.stop)
         
-            # finished checking this rule
-            # n_accepted += do_action(action, x_range, m_range, a_range, s_range)  # don't do this here
         else:
             # last rule, always performed
-            n_accepted += do_action(w, x_range, m_range, a_range, s_range)
+            n_accepted += do_action(w, ranges)
             
     return n_accepted
 
@@ -240,11 +145,6 @@ def star1(filename):
         # add up all ratings for all accepted parts
         sum += do_workflow(workflows, "in", item)
         
-        
-        
-    # print(workflows)
-    # print(items)
-    
     return sum
 
 def parse_workflows(w):
@@ -268,33 +168,33 @@ def star2(filename):
         w[key] = rules
         
     workflows = w
-    n_accepted = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
+    n_accepted = count_accepted(workflows, "in", [range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001)])
     return n_accepted
 
 def tests():
     workflows = parse_workflows(["in{x>3999:R,A}"])
-    n = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
+    n = count_accepted(workflows, "in", [range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001)])
     assert n == 3999*(4000**3), f"wrong answer: {n} != {3999*(4000**3)}"
 
     
     workflows = parse_workflows(["in{x>3999:A,R}"])
-    n = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
+    n = count_accepted(workflows, "in", [range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001)])
     assert n == 4000**3, f"wrong answer: {n} != {4000**3}"
     
     workflows = parse_workflows(["in{m>3999:A,R}"])
-    n = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
+    n = count_accepted(workflows, "in", [range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001)])
     assert n == 4000**3
     
     workflows = parse_workflows(["in{a>3999:A,R}"])
-    n = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
+    n = count_accepted(workflows, "in", [range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001)])
     assert n == 4000**3
     
     workflows = parse_workflows(["in{s>3999:A,R}"])
-    n = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
+    n = count_accepted(workflows, "in", [range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001)])
     assert n == 4000**3
     
     workflows = parse_workflows(["in{x>3998:A,R}"])
-    n = count_accepted(workflows, "in", range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001))
+    n = count_accepted(workflows, "in", [range(1, 4001), range(1, 4001), range(1, 4001), range(1, 4001)])
     assert n == 2*4000**3
     
     

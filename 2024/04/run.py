@@ -6,25 +6,6 @@ def get_input(filename):
 
     return lines
 
-
-# def right(lines, i, j):
-#     try:
-#         if lines[i][j:j+4] == "XMAS":
-#             return True
-#         else:
-#             return False
-#     except Exception:
-#         return False
-
-# def left(lines, i, j):
-#     try:
-#         if lines[i][j-4:j] == "XMAS":
-#             return True
-#         else:
-#             return False
-#     except Exception:
-#         return False
-
 template = [
     "ooooooo",
     "ooooooo",
@@ -175,25 +156,61 @@ def star1(filename):
     return count_xmas(lines)
 
 
+xmases = [
+[
+    "MoS",
+    "oAo",
+    "MoS",
+],
+[
+    "SoS",
+    "oAo",
+    "MoM",
+],
+[
+    "MoM",
+    "oAo",
+    "SoS",
+],
+[
+    "SoM",
+    "oAo",
+    "SoM",
+]
+]
 
-# def star2(filename):
-#     lines = get_input(filename)
-#     total = 0
-#     enabled = True
-#     for line in lines:
-#         for i in range(len(line)):
-#             if is_dont(line[i:]):
-#                 enabled = False
-#                 continue
-#             if is_do(line[i:]):
-#                 enabled = True
-#                 continue
+def look_for_xmas2(lines, i, j):
+    count = 0
+    
+    for arr in xmases:
+        matches = 0
+        for ii in range(3):
+            for jj in range(3):
+                try:
+                    matches += lines[i+ii][j+jj] == arr[ii][jj]
+                except Exception:
+                    breakpoint()
 
-#             product = get_product_if_mul(line[i:])
-#             if enabled:
-#                 total += product
+        if matches == 5:
+            count += 1
+    
+    return count
 
-#     return total
+def count_xmas2(lines):
+    count = 0
+    n = len(lines)
+    m = len(lines[0])
+    for i in range(n-2):  # skip edges
+        for j in range(m-2):  # skip edges
+            count += look_for_xmas2(lines, i, j)
+
+    return count
+
+
+def star2(filename):
+    lines = get_input(filename)
+    
+    return count_xmas2(lines)
 
 
 def tests():
@@ -208,17 +225,17 @@ def tests():
     print(f"example star 1: {ans}")
     assert ans == 18, f"wrong answer: {ans}"
     
-    # ans = star2("example2.txt")
-    # print(f"example star 2: {ans}")
-    # assert ans == 48, f"wrong answer: {ans}"
+    ans = star2("example.txt")
+    print(f"example star 2: {ans}")
+    assert ans == 9, f"wrong answer: {ans}"
 
 if __name__ == "__main__":
     tests()
     
     ans = star1("input.txt")
     print(f"star 1: {ans}")
-    assert ans == 173731097
+    assert ans == 2397
 
-    # ans = star2("input.txt")
-    # print(f"star 2: {ans}")
-    # assert ans == 93729253
+    ans = star2("input.txt")
+    print(f"star 2: {ans}")
+    assert ans == 1824

@@ -19,7 +19,7 @@ class Segment:
     y2: int
 
 
-def star1(filename):
+def star1(filename, star2=False):
     lines = get_input(filename)
     segments = []
     maxpos = [0,0]
@@ -54,9 +54,24 @@ def star1(filename):
             for x in range(start, stop+1):
                 grid[y, x] += 1
         else:
-            pass  # not handled yet
+            if not star2:
+                continue
+
+            if segment.x2 > segment.x1:
+                xx = list(range(segment.x1, segment.x2+1))
+            else:
+                xx = list(range(segment.x1, segment.x2-1, -1))
+            
+            if segment.y2 > segment.y1:
+                yy = list(range(segment.y1, segment.y2+1))
+            else:
+                yy = list(range(segment.y1, segment.y2-1, -1))
+                
+            assert len(xx) == len(yy)
+            for x, y in zip(xx, yy):
+                grid[y, x] += 1
     
-    print(grid)
+    # print(grid)
     return np.sum(grid >= 2)
 
 
@@ -65,18 +80,17 @@ def tests():
     print(f"example star 1: {ans}")
     assert ans == 5, f"wrong answer: {ans}"
     
-    # ans = star2("example.txt")
-    # print(f"example star 2: {ans}")
-    # assert ans == 1924, f"wrong answer: {ans}"
+    ans = star1("example.txt", star2=True)
+    print(f"example star 2: {ans}")
+    assert ans == 12, f"wrong answer: {ans}"
 
 if __name__ == "__main__":
     tests()
     
     ans = star1("input.txt")
     print(f"star 1: {ans}")
-    assert ans == 11774
+    assert ans == 6005
 
-    # ans = star2("input.txt")
-    # print(f"star 2: {ans}")
-    # assert ans == 4495
-
+    ans = star1("input.txt", star2=True)
+    print(f"star 2: {ans}")
+    assert ans == 23864

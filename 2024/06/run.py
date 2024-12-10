@@ -1,3 +1,12 @@
+from typing import Tuple, List, Optional
+import numpy as np
+import numpy.typing as npt
+
+
+Position = Tuple[int, int]
+GridType = np.uint8
+
+
 def get_input(filename):
     lines = []
     with open(filename) as file:
@@ -16,11 +25,15 @@ ormap = {
     "^": [0, -1],
 }
 
+FREE = 0
+BLOCKED = 1
+VISITED = 2
+
 
 class Guard:
-    def __init__(self, row, col, orientation):
-        self.x = col
-        self.y = row
+    def __init__(self, pos: Position, orientation):
+        self.x = pos[1]
+        self.y = pos[0]
         
         dxdy = ormap[orientation]
         self.dx = dxdy[0]
@@ -40,39 +53,37 @@ class Guard:
             self.dx = 1
             self.dy = 0
     
-    def move(self, grid):
-        m = len(grid)
-        n = len(grid[0])
+    def move(self, grid: npt.NDArray[GridType]):
+        size = grid.shape[0]
         
         x = self.x + self.dx
         y = self.y + self.dy
-        if x >= n or y >= m or x < 0 or y < 0:
+        if x >= size or y >= size or x < 0 or y < 0:
             return 0  # exited grid
 
-        while grid[y][x] == "#":
+        while grid[y, x] == BLOCKED:
             self.turn_right()
             x = self.x + self.dx
             y = self.y + self.dy
         
-        if x >= n or y >= m or x < 0 or y < 0:
+        if x >= size or y >= size or x < 0 or y < 0:
             return 0  # exited grid
 
-        grid[y][x] = "x"
+        grid[y, x] = VISITED
         self.x = x
         self.y = y
 
         return 1  # moved one tile
     
-    def get_next_pos(self, grid):
-        m = len(grid)
-        n = len(grid[0])
+    def get_next_pos(self, grid: npt.NDArray[GridType]) -> Optional[Position]:
+        n = m = grid.shape[0]
         
         x = self.x + self.dx
         y = self.y + self.dy
         if x >= n or y >= m or x < 0 or y < 0:
             return None  # exited grid
 
-        while grid[y][x] == "#":
+        while grid[y, x] == BLOCKED:
             self.turn_right()
             x = self.x + self.dx
             y = self.y + self.dy
@@ -89,30 +100,32 @@ class Guard:
 
 def star1(filename):
     lines = get_input(filename)
+    size = len(lines)
     
-    grid = []
-    for line in lines:
-        grid.append([])
-        for c in line:
-            grid[-1].append(c)
-    
-    for i in range(len(grid)):
-        for j in range(len(grid[0])):
-            if grid[i][j] != "." and grid[i][j] != "#":
-                guard = Guard(i, j, grid[i][j])
-                grid[i][j] = "x"
-    
+    grid = np.zeros((size, size), dtype=GridType)
+    for i, line in enumerate(lines):
+        for j, c in enumerate(line):
+            if c == ".":
+                grid[i,j] = 0
+            elif c == "#":
+                grid[i,j] = BLOCKED
+            elif c in ["<", ">", "v", "^"]:
+                # starting location
+                guard = Guard((i, j), c)
+                grid[i, j] = VISITED  # mark as visited
+            else:
+                raise RuntimeError()
+
     while guard.move(grid):
         pass
     
-    if len(grid) < 20:
-        for i in range(len(grid)):
-            print(grid[i])
+    if size < 20:
+        print(grid)
 
     count = 0
-    for i in range(len(grid)):
-        for j in range(len(grid[0])):
-            if grid[i][j] == "x":
+    for i in range(size):
+        for j in range(size):
+            if grid[i, j] == VISITED:
                 count += 1
                 
     return count
@@ -120,57 +133,41 @@ def star1(filename):
 
 class DirectionGrid:
     # Direction bits (4-bit number)
-    NORTH = 0b1000  # 8
-    EAST  = 0b0100  # 4
-    SOUTH = 0b0010  # 2
-    WEST  = 0b0001  # 1
+    NORTH: GridType = 0b1000  # 8
+    EAST: GridType = 0b0100   # 4
+    SOUTH: GridType = 0b0010  # 2
+    WEST: GridType = 0b0001   # 1
     
     OK = 0
     LOOP = 1
     OUTSIDE = 2
     
-    def __init__(self, size):
+    def __init__(self, size: int) -> None:
         """Initialize an n x n grid where each cell is a 4-bit number."""
-        self.size = size
-        self.grid = [[0 for _ in range(size)] for _ in range(size)]
+        self.size: int = size
+        self.grid: npt.NDArray[GridType] = np.zeros((size, size), dtype=GridType)
     
-    def is_valid_position(self, row, col):
+    def reset(self):
+        self.grid.fill(0)
+    
+    def is_valid_position(self, pos: Position) -> bool:
         """Check if the given position is within grid bounds."""
-        return 0 <= row < self.size and 0 <= col < self.size
+        return 0 <= pos[0] < self.size and 0 <= pos[1] < self.size
     
-    # def get_entry_directions(self, row, col):
-    #     """Get a list of directions from which this cell has been entered."""
-    #     if not self.is_valid_position(row, col):
-    #         return []
-            
-    #     directions = []
-    #     cell = self.grid[row][col]
-        
-    #     if cell & self.NORTH:
-    #         directions.append('North')
-    #     if cell & self.EAST:
-    #         directions.append('East')
-    #     if cell & self.SOUTH:
-    #         directions.append('South')
-    #     if cell & self.WEST:
-    #         directions.append('West')
-        
-    #     return directions
-    
-    def has_been_entered_from(self, row, col, direction):
+    def has_been_entered_from(self, pos: Position, direction: GridType):
         """Check if a cell has already been entered from a specific direction."""
-        if not self.is_valid_position(row, col):
+        if not self.is_valid_position(pos):
             return False
-        return bool(self.grid[row][col] & direction)
+        return bool(self.grid[pos[0]][pos[1]] & direction)
     
-    def enter_from_direction(self, row, col, direction):
+    def enter_from_direction(self, pos: Position, direction: GridType):
         """Mark that a cell has been entered from a specific direction."""
-        if not self.is_valid_position(row, col):
-            raise ValueError(f"Position ({row}, {col}) is outside grid bounds")
+        if not self.is_valid_position(pos):
+            raise ValueError(f"Position ({pos}) is outside grid bounds")
             
-        self.grid[row][col] |= direction
+        self.grid[pos[0]][pos[1]] |= direction
     
-    def move_entity(self, from_pos, to_pos):
+    def move_entity(self, from_pos: Position, to_pos: Position):
         """
         Move an entity from one position to another, updating direction bits.
         Returns True if the move creates a loop, False otherwise.
@@ -178,8 +175,8 @@ class DirectionGrid:
         from_row, from_col = from_pos
         to_row, to_col = to_pos
         
-        if not (self.is_valid_position(from_row, from_col) and 
-                self.is_valid_position(to_row, to_col)):
+        if not (self.is_valid_position(from_pos) and 
+                self.is_valid_position(to_pos)):
             raise self.OUTSIDE
         
         # Determine direction of movement and corresponding entry direction
@@ -196,40 +193,12 @@ class DirectionGrid:
             raise ValueError("From and to positions are the same")
             
         # Check for loop
-        if self.has_been_entered_from(to_row, to_col, direction):
+        if self.has_been_entered_from(to_pos, direction):
             return self.LOOP
             
         # Update the grid
-        self.enter_from_direction(to_row, to_col, direction)
+        self.enter_from_direction(to_pos, direction)
         return self.OK
-
-
-def check_if_makes_loop(start_row, start_col, row, col, lines):
-    grid = []
-    for line in lines:
-        grid.append([])
-        for c in line:
-            grid[-1].append(c)
-
-    dgrid = DirectionGrid(len(grid))
-    orientation = grid[start_row][start_col]
-    guard = Guard(start_row, start_col, orientation)
-    
-    grid[row][col] = "#"
-    
-    while True:
-        from_pos = (guard.y, guard.x)
-        to_pos = guard.get_next_pos(grid)
-        if not to_pos:
-            return False  # outside grid
-
-        ret = dgrid.move_entity(from_pos, to_pos)
-        if ret == DirectionGrid.OUTSIDE:
-            return False
-        elif ret == DirectionGrid.LOOP:
-            return True
-        else:
-            continue
 
 
 def star2(filename):
@@ -240,35 +209,73 @@ def star2(filename):
     # indicate which direction we came from?
     
     lines = get_input(filename)
+    size = len(lines)
     
-    assert len(lines) == len(lines[0])
-    
-    grid = []
-    for line in lines:
-        grid.append([])
-        for c in line:
-            grid[-1].append(c)
-    
-    start_row = None
-    start_col = None
-    for row in range(len(grid)):
-        for col in range(len(grid[0])):
-            if grid[row][col] != "." and grid[row][col] != "#":
-                start_row = row
-                start_col = col
+    # initialize grid
+    grid = np.zeros((size, size), dtype=GridType)
+    for i, line in enumerate(lines):
+        for j, c in enumerate(line):
+            if c == ".":
+                grid[i,j] = 0
+            elif c == "#":
+                grid[i,j] = BLOCKED
+            elif c in ["<", ">", "v", "^"]:
+                # starting location
+                start_pos = (i, j)
+                start_orientation = c
+                grid[i, j] = VISITED  # mark as visited
+            else:
+                raise RuntimeError()
 
-    loops = 0
-    n_possible = len(grid) * len(grid[0])
+    guard = Guard(start_pos, start_orientation)
+    while guard.move(grid):
+        pass
+
+    n_visited = np.sum(grid == VISITED)
+    print(f"Visited {n_visited}")
+
+    dgrid = DirectionGrid(size)
+    n_loops = 0
     n_checked = 0
-    for row in range(len(grid)):
-        for col in range(len(grid[0])):
-            is_loop = check_if_makes_loop(start_row, start_col, row, col, grid)
-            loops += is_loop
+    is_loop = False
+    for row in range(size):
+        for col in range(size):
+            pos = (row, col)
+            # only try blocks that have been visited
+            # don't try starting position
+            if grid[pos] != VISITED and pos != start_pos:
+                continue
+            
+            # check if makes loop
+            guard = Guard(start_pos, start_orientation)
+            grid[pos] = BLOCKED
+            
+            while True:
+                from_pos = (guard.y, guard.x)
+                to_pos = guard.get_next_pos(grid)
+                if not to_pos:
+                    # outside grid
+                    is_loop = False
+                    break
+
+                ret = dgrid.move_entity(from_pos, to_pos)
+                if ret == DirectionGrid.OUTSIDE:
+                    is_loop = False
+                    break
+                elif ret == DirectionGrid.LOOP:
+                    is_loop = True
+                    break
+            
+            # reset grid
+            grid[pos] = FREE
+            dgrid.reset()
+
+            n_loops += is_loop
             n_checked += 1
             if is_loop:
-                print(f"{loops = }, checked {n_checked} of {n_possible} ({n_checked/n_possible*100} %)")
+                print(f"{n_loops = }, checked {n_checked} of {n_visited} ({round(n_checked/n_visited*100, 1)} %)")
                 
-    return loops
+    return n_loops
 
 
 def tests():
@@ -289,4 +296,4 @@ if __name__ == "__main__":
 
     ans = star2("input.txt")
     print(f"star 2: {ans}")
-    # assert ans == 5770
+    assert ans == 1984

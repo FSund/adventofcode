@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def get_input(filename):
@@ -9,16 +8,6 @@ def get_input(filename):
             lines.append(line.strip("\n"))
 
     return lines
-
-
-# from enum import IntEnum
-
-# # class syntax
-# class Obj(IntEnum):
-#     EMPTY = 0
-#     WALL = 1
-#     ROBOT = 2
-#     BOX = 3
 
 
 EMPTY = 0
@@ -118,10 +107,6 @@ def tests():
     ans = aoc("example.txt")
     print(f"example star 1: {ans}")
     assert ans == 10092, f"wrong answer: {ans}"
-    
-    # ans = aoc("example.txt", star2=True)
-    # print(f"example star 2: {ans}")
-    # assert ans == 1206, f"wrong answer: {ans}"
 
 if __name__ == "__main__":
     tests()
@@ -129,8 +114,3 @@ if __name__ == "__main__":
     ans = aoc("input.txt")
     print(f"star 1: {ans}")
     assert ans == 1429911
-    
-    ans = aoc("input.txt", star2=True)
-    print(f"star 2: {ans}")
-    # 71922170897884 too low
-    # assert ans == 1344

@@ -30,7 +30,7 @@ def bfs(
     score_limit: int,
     viz=False
 ):
-    # visited = set() # to keep track of already visited nodes
+    visited = set() # to keep track of already visited nodes
     # queue = list()  # queue
     queue = PriorityQueue()
     parent = {}  # dict, for backtrace
@@ -41,7 +41,7 @@ def bfs(
     # push the root node to the queue and mark it as visited
     # queue.append(start)
     queue.put(start_node)
-    # visited.add(start_node)
+    visited.add(start_node)
     
     # east is adjacent[0], add 1 to rotate clockwise and -1 to rotate counterclockwise
     directions = ((0, 1), (1, 0), (0, -1), (-1, 0),)
@@ -95,36 +95,36 @@ def bfs(
         # 1) forward (+1 score)
         # 2) turn left (+1000 score)
         # 3) turn right (+1000 score)
-        dir = directions[rot_idx]
-        rot_1x = (rot_idx + 1) % 4
-        dir_1x = directions[rot_1x]
-        rot_2x = (rot_idx + 2) % 4
-        dir_2x = directions[rot_2x]
-        rot_3x = (rot_idx + 3) % 4
-        dir_3x = directions[rot_3x]
-        neighbor_nodes = [
-            (score +    1, i + dir[0],    j + dir[1],    rot_idx),  # forward
-            (score + 1001, i + dir_1x[0], j + dir_1x[1], rot_1x ),  # turn right then move forward
-            (score + 2001, i + dir_2x[0], j + dir_2x[1], rot_2x ),  # turn 180 then move forward
-            (score + 1001, i + dir_3x[0], j + dir_3x[1], rot_3x ),  # turn left then move forward
-        ]
         # dir = directions[rot_idx]
-        # rot_r = (rot_idx + 1) % 4
-        # rot_l = (rot_idx + 4 - 1) % 4
+        # rot_1x = (rot_idx + 1) % 4
+        # dir_1x = directions[rot_1x]
+        # rot_2x = (rot_idx + 2) % 4
+        # dir_2x = directions[rot_2x]
+        # rot_3x = (rot_idx + 3) % 4
+        # dir_3x = directions[rot_3x]
         # neighbor_nodes = [
-        #     (score +    1, i + dir[0], j + dir[1], rot_idx),  # forward
-        #     (score + 1000, i,          j,          rot_r  ),  # turn right (stay on same tile)
-        #     (score + 1000, i,          j,          rot_l  ),  # turn left (stay on same tile)
+        #     (score +    1, i + dir[0],    j + dir[1],    rot_idx),  # forward
+        #     (score + 1001, i + dir_1x[0], j + dir_1x[1], rot_1x ),  # turn right then move forward
+        #     (score + 2001, i + dir_2x[0], j + dir_2x[1], rot_2x ),  # turn 180 then move forward
+        #     (score + 1001, i + dir_3x[0], j + dir_3x[1], rot_3x ),  # turn left then move forward
         # ]
+        dir = directions[rot_idx]
+        rot_r = (rot_idx + 1) % 4
+        rot_l = (rot_idx + 4 - 1) % 4
+        neighbor_nodes = [
+            (score +    1, i + dir[0], j + dir[1], rot_idx),  # forward
+            (score + 1000, i,          j,          rot_r  ),  # turn right (stay on same tile)
+            (score + 1000, i,          j,          rot_l  ),  # turn left (stay on same tile)
+        ]
         for node in neighbor_nodes:
             # position = (node[0], node[1])
             position = (node[1], node[2], node[3])  # (i, j, <index of direction this tile was entered from>)
             i, j = position[0], position[1]
             
             # check if the node is already visited
-            # includes both position and direction ???
-            # if position in visited:
-            #     continue
+            visited_node = (current_pos, position)
+            if visited_node in visited:
+                continue
             
             # only skip if the score is higher than the lowest score
             new_score = node[0]
@@ -141,17 +141,18 @@ def bfs(
 
             # if the neighbour nodes are not already visited, 
             # push them to the queue and mark them as visited
-            # visited.add(position)
+            # visited.add(node)
+            visited.add(visited_node)
             # queue.append(node)
             queue.put(node)
             
             if node not in parent:
-                parent[node] = [current_node]
-            else:
-                if current_node not in parent[node]:
-                    parent[node].append(current_node)
+                parent[node] = set()
+            parent[node].add(current_node)
 
             # parent[position] = current_pos
+    
+    print("bfs done, doing reverse stuff")
     
     # for rot_idx in range(4):
     #     path = backtrace_bfs(parent, start_node, (end[0], end[1], rot_idx))
@@ -182,9 +183,10 @@ def bfs(
             new_grid[i, j] = 9
             queue.put(parent_node)
         
-    fig, ax = plt.subplots()
-    im = ax.imshow(new_grid, vmin=0, vmax=10)
-    fig.show()
+    if viz:
+        fig, ax = plt.subplots()
+        im = ax.imshow(new_grid, vmin=0, vmax=10)
+        fig.show()
     
     return tiles
 

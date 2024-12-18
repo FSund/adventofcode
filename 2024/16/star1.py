@@ -162,5 +162,3 @@ if __name__ == "__main__":
     
     ans = aoc("input.txt")
     print(f"star 1: {ans}")
-    # assert ans == 1429911
-    # 114408 too high

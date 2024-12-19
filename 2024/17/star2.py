@@ -64,7 +64,7 @@ def run_program(program, A, B, C):
     return out
 
 
-def aoc(filename):
+def aoc(filename, expected_result=None):
     lines = get_input(filename)
     
     A0 = int(lines[0].split(": ")[1])
@@ -75,17 +75,28 @@ def aoc(filename):
     A = 0
     while True:
         out = run_program(program, A, B0, C0)
-        out = int("".join([str(x) for x in out]))
-        if out == A0:
+        if out == program:
             return A
         
         if A % 100000 == 0:
             print(f"{A = }, {out = }")
+        if expected_result and A > expected_result:
+            raise ValueError(f"too high: {A = }")
+
         A += 1
 
 
 def tests():
-    ans = aoc("example2.txt")
+    lines = get_input("example2.txt")
+    A0 = int(lines[0].split(": ")[1])
+    B0 = int(lines[1].split(": ")[1])
+    C0 = int(lines[2].split(": ")[1])
+    program = [int(x) for x in lines[4].split(": ")[1].split(",")]
+    out = run_program(program, 117440, B0, C0)
+    print(f"{out = } == {program = }")
+    assert out == program
+    
+    ans = aoc("example2.txt", 117440)
     print(f"example star 1: {ans}")
     assert ans == 117440, f"wrong answer: {ans}"
 

@@ -10,26 +10,27 @@ def get_input(filename):
     return lines
 
 
-def run_program(program, A, B, C):
-    def get_combo(operand: int):
-        if 0 <= operand <= 3:
-            return operand
-        elif operand == 4:
-            return A
-        elif operand == 5:
-            return B
-        elif operand == 6:
-            return C
-        else:
-            raise ValueError("operand out of range")
+def get_combo(operand: int, A: int, B: int, C: int):
+    if 0 <= operand <= 3:
+        return operand
+    elif operand == 4:
+        return A
+    elif operand == 5:
+        return B
+    elif operand == 6:
+        return C
+    else:
+        raise ValueError("operand out of range")
 
+
+def run_program(program, A, B, C):
     out = []
     ip = 0
     while ip < len(program):
         opcode = program[ip]
         operand = program[ip+1]
         literal_operand = operand
-        combo_operand = get_combo(operand)
+        combo_operand = get_combo(operand, A, B, C)
         increase_ip = True
         if opcode == 0:
             # adv
@@ -64,27 +65,33 @@ def run_program(program, A, B, C):
     return out
 
 
-def aoc(filename, expected_result=None):
-    lines = get_input(filename)
-    
-    A0 = int(lines[0].split(": ")[1])
-    B0 = int(lines[1].split(": ")[1])
-    C0 = int(lines[2].split(": ")[1])
-    program = [int(x) for x in lines[4].split(": ")[1].split(",")]
-
-    A = 0
-    while True:
+def find_bits(idx, program, A, B0, C0, options):
+    for jj in range(0b111+1):
         out = run_program(program, A, B0, C0)
-        if out == program:
-            return A
-        
-        if A % 100000 == 0:
-            print(f"{A = }, {out = }")
-        if expected_result and A > expected_result:
-            raise ValueError(f"too high: {A = }")
+        if out[0] == program[idx]:
+            # print(f"A = {A} = {A:b}, {out = }")
+            if idx == 0:
+                print(f"A = {A} = {A:b}, {out = }")
+                options.append(A)
+            else:
+                find_bits(idx-1, program, A << 3, B0, C0, options)
 
         A += 1
 
+def aoc(filename):
+    lines = get_input(filename)
+    
+    # A0 = int(lines[0].split(": ")[1])
+    B0 = int(lines[1].split(": ")[1])
+    C0 = int(lines[2].split(": ")[1])
+    program = [int(x) for x in lines[4].split(": ")[1].split(",")]
+    program = tuple(program)
+    
+    A = 0b000
+    options = []
+    find_bits(len(program) - 1, program, A, B0, C0, options)
+
+    return min(options)
 
 def tests():
     lines = get_input("example2.txt")
@@ -96,7 +103,7 @@ def tests():
     print(f"{out = } == {program = }")
     assert out == program
     
-    ans = aoc("example2.txt", 117440)
+    ans = aoc("example2.txt")
     print(f"example star 1: {ans}")
     assert ans == 117440, f"wrong answer: {ans}"
 
@@ -105,4 +112,4 @@ if __name__ == "__main__":
     tests()
     
     ans = aoc("input.txt")
-    print(f"star 1: {ans}")
+    print(f"{ans = }")

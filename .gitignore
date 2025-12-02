@@ -1,3 +1,8 @@
+# ignore all input.txt files and input*.txt files
+# advent of code author does not want input files to be committed
+input.txt
+input*.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

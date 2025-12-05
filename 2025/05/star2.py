@@ -22,7 +22,6 @@ def aoc(filename):
             ingredients.append(int(line))
     
     ranges = sorted(ranges)  # sorts by first element    
-    print(ranges)
     n = len(ranges)
     modified = True
     while modified:
@@ -42,7 +41,6 @@ def aoc(filename):
                     # then delete second range (is contained in first range now)
                     ranges[j][0] = 0
                     ranges[j][1] = 0
-                    # print(f"Deleted range {j}")
 
                 # if fully contained within, just delete it
                 elif lower <= ranges[j][0] <= upper and lower <= ranges[j][1] <= upper:
@@ -53,7 +51,6 @@ def aoc(filename):
     for lower, upper in ranges:
         if lower == 0 and upper == 0:
             continue
-        print(f"{lower = }, {upper = }")
         ans += upper - lower + 1
 
     return ans

@@ -2,7 +2,6 @@ from pathlib import Path
 from dataclasses import dataclass
 from collections import defaultdict
 
-
 def get_input(filename):
     script_dir = Path(__file__).parent
     lines = []
@@ -45,7 +44,7 @@ def dfs_iterative(graph, start):
     return visited
 
 
-def aoc(filename, n_connections=1000):
+def aoc(filename):
     lines = get_input(filename)
 
     boxes = []
@@ -61,9 +60,8 @@ def aoc(filename, n_connections=1000):
             dist.append((d, (i,j)))
     
     dist = sorted(dist)
-
     graph = defaultdict(list)
-    for d in dist[:n_connections]:
+    for d in dist:
         i = d[1][0]
         j = d[1][1]
         
@@ -71,28 +69,19 @@ def aoc(filename, n_connections=1000):
         graph[i].append(j)
         graph[j].append(i)
 
-    keys = list(graph.keys())
-    v_sets = set()
-    for key in keys:
-        visited = dfs_iterative(graph, key)
-        v_sets.add(tuple(sorted(visited)))
+        # only need to check a single circuit, since if all of them are connected, all of them are connected
+        visited = dfs_iterative(graph, 0)
+        if len(visited) == len(boxes):
+            return boxes[i].x*boxes[j].x
 
-    sizes = []
-    for v in v_sets:
-        sizes.append(len(v))
 
-    sizes = list(reversed(sorted(sizes)))
-    ans = 1
-    for s in sizes[:3]:
-        ans *= s
-
-    return ans
+    raise RuntimeError()
 
 
 def tests():
-    ans = aoc("example.txt", 10)
+    ans = aoc("example.txt")
     print(f"example: {ans}")
-    assert ans == 40, f"wrong answer: {ans}"
+    assert ans == 25272, f"wrong answer: {ans}"
 
 
 if __name__ == "__main__":

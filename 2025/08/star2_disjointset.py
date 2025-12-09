@@ -1,6 +1,7 @@
 from pathlib import Path
 from scipy.cluster.hierarchy import DisjointSet
 import time
+import heapq
 
 
 def get_input(filename):
@@ -36,13 +37,15 @@ def aoc(filename):
             d = (box_i[0] - box_j[0])**2 + (box_i[1] - box_j[1])**2 + (box_i[2] - box_j[2])**2
             edges.append((d, i, j))
     
-    # sort by distance
-    edges.sort()
+    # use heapq for efficiency
+    heapq.heapify(edges)
 
     print(f"Build & sort: {time.perf_counter() - t0}")
 
     circuits = DisjointSet(list(range(n)))
-    for d, i, j in edges:
+    while True:
+        d, i, j = heapq.heappop(edges)  # get minimum element
+
         # connect i to j
         circuits.merge(i, j)
         
@@ -51,8 +54,6 @@ def aoc(filename):
             x1 = boxes[i][0]
             x2 = boxes[j][0]
             return x1*x2
-
-    raise RuntimeError()
 
 
 def tests():

@@ -12,15 +12,15 @@ def get_input(filename):
     return lines
 
 
-def bfs(start_counter, buttons, target_counter) -> int:
-    target_counter = tuple(target_counter)
-    start = 0
+def bfs(start, buttons, target) -> int:
+    target = tuple(target)
+    start = tuple(start)
     visited = set()
-    start = (
-        start_counter,  # light state
+    start_node = (
+        start,  # light state
         tuple([0 for i in range(len(buttons))])  # number of presses of each button (first button, second button etc.)
     )
-    queue = deque([start])
+    queue = deque([start_node])
     # result = []
     
     visited.add(start)
@@ -31,19 +31,17 @@ def bfs(start_counter, buttons, target_counter) -> int:
 
         for idx, button in enumerate(buttons):
             # press button once
-            new_counter = list(node[0])
-            for j in button:  # idx of counter to increase
-                new_counter[j] += 1
+            new_counter = tuple(x + y for x, y in zip(node[0], button))
             
             new_presses = list(node[1])
             new_presses[idx] += 1  # pressed button idx once
             neighbor = (tuple(new_counter), tuple(new_presses))
 
-            if neighbor[0] == target_counter:
+            if neighbor[0] == target:
                 return sum(neighbor[1])
             
-            if neighbor not in visited:
-                visited.add(neighbor)
+            if neighbor[0] not in visited:
+                visited.add(neighbor[0])
                 queue.append(neighbor)
     
     raise RuntimeError()
@@ -55,13 +53,23 @@ def find_fewest_presses(line) -> int:
     buttons = elements[1:-1]
     joltage = elements[-1].strip("{").strip("}")
     
-    start_counters = tuple([0 for i in joltage.split(",")])
+    n = len(joltage.split(","))
+    start_counters = tuple([0 for i in range(n)])
     target_counters = [int(j) for j in joltage.split(",")]
 
     for i in range(len(buttons)):
         buttons[i] = [int(d) for d in buttons[i].strip("(").strip(")").split(",")]
+    
+    button_effects = []
+    for button in buttons:
+        button_effects.append([0 for i in range(n)])
+        for idx in button:
+            button_effects[-1][idx] += 1
 
-    return bfs(start_counters, buttons, target_counters)
+        button_effects[-1] = tuple(button_effects[-1])
+    button_effects = tuple(button_effects)
+
+    return bfs(start_counters, button_effects, target_counters)
 
 
 def aoc(filename):

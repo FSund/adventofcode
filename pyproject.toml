@@ -9,4 +9,5 @@ dependencies = [
     "numpy>=2.3.5",
     "pyqt6>=6.10.1",
     "scipy>=1.16.3",
+    "sympy>=1.14.0",
 ]

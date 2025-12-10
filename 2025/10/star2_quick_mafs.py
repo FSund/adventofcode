@@ -1,6 +1,5 @@
 from pathlib import Path
 import numpy as np
-import sympy as sp
 from scipy.optimize import milp, LinearConstraint, Bounds
 
 
@@ -71,55 +70,31 @@ def find_fewest_presses(line, return_presses=False) -> int:
 
     button_effects = np.asarray(button_effects)
 
-    if False:
-        A = button_effects.transpose()
-        b = target
-        x, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
-    
-    elif False:
-        A = sp.Matrix(button_effects.transpose())
-        b = sp.Matrix(target)
+    A = button_effects.transpose()
+    b = target
+    c = np.ones(A.shape[1])  # coefficients for objective function
 
-        # Solve symbolically (gives exact rationals)
-        x = A.pinv() @ b  # Moore-Penrose pseudoinverse
+    # Constraint: Ax = b
+    constraints = LinearConstraint(A, b, b)
+    bounds = Bounds(lb=0, ub=np.inf)
 
-        print(f"Exact rational solution: {x}")
+    # All variables are integers
+    integrality = 3
 
-    else:
-        A = button_effects.transpose()
-        b = target
-        c = np.ones(A.shape[1])  # coefficients for objective function
+    result = milp(c=c, constraints=constraints, bounds=bounds, integrality=integrality)
 
-        # Constraint: Ax = b
-        constraints = LinearConstraint(A, b, b)
-        bounds = Bounds(lb=0, ub=np.inf)
+    if result.success:
+        x = np.round(result.x).astype(int)
+        verify_result(line, x)
 
-        # All variables are integers
-        # integrality = np.ones(A.shape[1])  # 1 = integer, 0 = continuous
-        integrality = 3
-
-        result = milp(c=c, constraints=constraints, bounds=bounds, integrality=integrality)
-
-        if result.success:
-            # print(f"{result.x=}")
-            x = np.round(result.x).astype(int)
-            # print(f"Solution: x = {x}")
-            # print(f"Verification: Ax = {A @ x}")
-
-            if result.status != 0:
-                print("NON OPTIMAL")
-
-            
-            verify_result(line, x)
-
-            if return_presses:
-                return x
-            else:
-                return sum(x)
+        if return_presses:
+            return x
         else:
-            # print("No integer solution found")
+            return sum(x)
+    else:
+        # print("No integer solution found")
 
-            raise RuntimeError()
+        raise RuntimeError()
 
 
 def aoc(filename):
@@ -158,4 +133,3 @@ if __name__ == "__main__":
     
     ans = aoc("input.txt")
     print(f"{ans = }")
-    # 15117 is too low

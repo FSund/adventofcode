@@ -72,9 +72,14 @@ def find_fewest_presses(line) -> int:
 def aoc(filename):
     lines = get_input(filename)
     ans = 0
+    biggest = 0
     for line in lines:
-        ans += find_fewest_presses(line)
+        presses = find_fewest_presses(line)
+        if presses > biggest:
+            biggest = presses
+        ans += presses
 
+    print(f"{biggest = }")
     return ans
         
 

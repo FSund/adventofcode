@@ -1,5 +1,4 @@
 from pathlib import Path
-from math import factorial
 
 
 def get_input(filename):
@@ -23,7 +22,7 @@ def aoc(filename):
         cost = 0
         for crab in crabs:
             diff = abs(crab - target)
-            cost += sum([i for i in range(1, diff + 1)])
+            cost += diff * (diff + 1) // 2
         if cost < ans:
             ans = cost
     

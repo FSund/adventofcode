@@ -26,9 +26,9 @@ def dfs_path_exists(graph, start, target) -> bool:
         if node not in visited:
             visited.add(node)
             
-            neighbors = [1, -1, 1j, -1j]  # 4 neighors
-            for neighbor in neighbors:
-                
+            directions = [1, -1, 1j, -1j]  # 4 neighors
+            for dir in directions:
+                neighbor = node + dir
                 if graph[neighbor] >= graph[start]:
                     continue
                 if neighbor not in visited:
@@ -37,14 +37,19 @@ def dfs_path_exists(graph, start, target) -> bool:
     return False
 
 
-def aoc(filename):
-    lines = get_input(filename)
-
-    ans = 0
+def make_graph(lines):
     graph = defaultdict(lambda: 99)
     for i, line in enumerate(lines):
         for j, height in enumerate(line):
             graph[complex(i, j)] = int(height)
+
+    return graph
+
+
+def aoc(filename):
+    lines = get_input(filename)
+
+    graph = make_graph(lines)
     
     keys = list(graph.keys())  # snapshot keys, since the dict can get new default elements during iteration
 
@@ -59,6 +64,8 @@ def aoc(filename):
         if low_point:
             low_points.append(point)
 
+    # this is very badly optimized (should cache dfs for each basin)
+    # but gets the result in 10 seconds or so
     basins = defaultdict(int)
     for point in keys:
         # "Locations of height `9` do not count as being in any basin"
@@ -70,19 +77,17 @@ def aoc(filename):
             if dfs_path_exists(graph, point, low_point):
                 basins[low_point] += 1
 
-    count = 0
-    for b, size in basins.items():
-        count += size
-    assert count <= len(keys)
-
-    ans = 0
-    return ans
+    sizes = list(reversed(sorted(basins.values())))
+    return sizes[0]*sizes[1]*sizes[2]
         
 
 def tests():
+    graph = make_graph(get_input("example.txt"))
+    assert dfs_path_exists(graph, 8j, 9j)
+
     ans = aoc("example.txt")
     print(f"example: {ans}")
-    assert ans == 15, f"wrong answer: {ans}"
+    assert ans == 1134, f"wrong answer: {ans}"
 
 
 if __name__ == "__main__":

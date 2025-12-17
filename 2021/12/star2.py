@@ -1,6 +1,7 @@
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Any
 from collections import defaultdict
+from itertools import product
 
 
 def get_input(filename):
@@ -13,64 +14,65 @@ def get_input(filename):
     return lines
 
 
-DIRECTIONS = [1, -1, 1j, -1j, 1+1j, 1-1j, -1+1j, -1-1j]
+def visited_small_cave_twice(path):
+    for this in path:
+        if this.islower():
+            if path.count(this) > 1:
+                return True
+    return False
 
 
-def flash(pos, octii):
-    # return all octopuses that should flash the next round
-    assert octii[pos]
-    assert octii[pos] > 9
+def dfs_all_paths(graph: Dict[str, List[str]], start: str, target: str) -> List[List[str]]:
+    def dfs_helper(node: Any, target: Any, path: List[Any]) -> List[List[Any]]:
+        if node == target:
+            return [path]
+        
+        all_paths = []
+        for neighbor in graph.get(node, []):
+            if neighbor == "start":
+                continue
 
-    # octii[pos] = 0
-    to_flash = []
-    for dir in DIRECTIONS:
-        neigh = pos + dir
-        if octii[neigh]:  # bounds check
-            octii[neigh] += 1
-            if octii[neigh] > 9:
-                # flash(neigh, octii)
-                to_flash.append(neigh)
+            # allow visiting a single small cave twice
+            # check if small cave is visited more than once
+            if neighbor.islower() and neighbor in path:
+                
+                # if already visited a single small cave twice, skip this neighbor
+                if visited_small_cave_twice(path):
+                    continue
+                else:
+                    # allow
+                    pass
 
-    return to_flash
+            all_paths.extend(dfs_helper(neighbor, target, path + [neighbor]))
+        
+        return all_paths
+    
+    return dfs_helper(start, target, [start])
+
 
 def aoc(filename):
     lines = get_input(filename)
-    octii = defaultdict(lambda: None)
-    for i, line in enumerate(lines):
-        for j, energy_level in enumerate(line):
-            octii[complex(i, j)] = int(energy_level)
-
-    keys = list(octii.keys())  # store keys since size of octii can change
-    step = 1
-    while True:
-        # First, the energy level of each octopus increases by `1`
-        to_flash = []
-        for pos in keys:
-            octii[pos] += 1
-            if octii[pos] > 9:
-                to_flash.append(pos)
-
-        #
-        flashed_this_step = []
-        while to_flash:
-            new_flash = []
-            for pos in to_flash:
-                if pos not in flashed_this_step:  # can only flash once per step
-                    new_flash += flash(pos, octii)
-                    flashed_this_step.append(pos)
-            to_flash = new_flash
-
-        if len(flashed_this_step) == len(keys):
-            return step
-        step += 1
-        for pos in flashed_this_step:
-            octii[pos] = 0
+    graph = defaultdict(list)
+    for line in lines:
+        start, end = line.split("-")
+        graph[start].append(end)
+        
+        # add backwards connection
+        # if start != "start" and end != "start":
+        graph[end].append(start)
+    
+    paths = dfs_all_paths(graph, "start", "end")
+    return len(paths)
         
 
 def tests():
+    ans = aoc("example2.txt")
+    print(f"example: {ans}")
+    assert ans == 103, f"wrong answer: {ans}"
+
     ans = aoc("example.txt")
     print(f"example: {ans}")
-    assert ans == 195, f"wrong answer: {ans}"
+    assert ans == 36, f"wrong answer: {ans}"
 
 
 if __name__ == "__main__":
@@ -78,3 +80,4 @@ if __name__ == "__main__":
     
     ans = aoc("input.txt")
     print(f"{ans = }")
+    # 133460 too high
